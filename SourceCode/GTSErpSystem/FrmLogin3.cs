@@ -523,72 +523,113 @@ public class FrmLogin3 : MaterialForm
 		}
 	}
 
-		private void GetDataFromXml()
+			private void GetDataFromXml()
 	{
-		try
+		string xmlPath = Path.Combine(Application.StartupPath, "ERP.xml");
+
+		if (File.Exists(xmlPath))
 		{
-			string xmlPath = Path.Combine(Application.StartupPath, "ERP.xml");
-			if (File.Exists(xmlPath))
+			try
 			{
-				XmlSerializer serializer = new XmlSerializer(typeof(List<SaveConnectionForXml>));
-				List<SaveConnectionForXml> settings;
-				using (FileStream stream = new FileStream(xmlPath, FileMode.Open, FileAccess.Read, FileShare.Read))
-				{
-					settings = (List<SaveConnectionForXml>)serializer.Deserialize(stream);
-				}
-
-				if (settings == null || settings.Count == 0)
-					throw new InvalidDataException("ملف ERP.xml لا يحتوي على إعدادات اتصال.");
-
-				SaveConnectionForXml saved = settings[0];
-				LoginDetails.nameServer = saved._comboServer;
-				LoginDetails.databaseServer = saved._comboDatabase;
-				LoginDetails.userNameServer = Class_Encryption.DecryptString(saved._TxtUser, "EF");
-				LoginDetails.passServer = Class_Encryption.DecryptString(saved._TxtPassword, "EF");
-
-				System.Data.SqlClient.SqlConnectionStringBuilder sqlBuilder =
-					new System.Data.SqlClient.SqlConnectionStringBuilder
-					{
-						DataSource = LoginDetails.nameServer,
-						InitialCatalog = LoginDetails.databaseServer,
-						UserID = LoginDetails.userNameServer,
-						Password = LoginDetails.passServer,
-						PersistSecurityInfo = true,
-						MultipleActiveResultSets = true
-					};
-				LoginDetails.ConnString = sqlBuilder.ConnectionString;
+				LoadSavedConnectionFromXml(xmlPath);
 				return;
 			}
+			catch (Exception xmlException)
+			{
+				try
+				{
+					// Program.Main already warns when it has to fall back from a bad ERP.xml.
+					LoadConnectionDetailsFromConfiguration();
+					return;
+				}
+				catch (Exception configurationException)
+				{
+					MessageBox.Show(
+						"تعذر قراءة إعداد الاتصال من ERP.xml ومن ملف إعدادات البرنامج.\r\n" +
+						xmlException.Message + "\r\n" + configurationException.Message,
+						"مستكشف البيانات",
+					MessageBoxButtons.OK,
+					MessageBoxIcon.Error,
+					MessageBoxDefaultButton.Button1,
+					MessageBoxOptions.RightAlign);
+					return;
+				}
+			}
+		}
 
-			// ERP.xml is optional when the current executable configuration has
-			// a valid Entity Framework connection string.
-			System.Configuration.ConnectionStringSettings configured =
-				System.Configuration.ConfigurationManager.ConnectionStrings["GTSdbEntities"];
-			if (configured == null || string.IsNullOrWhiteSpace(configured.ConnectionString))
-				throw new InvalidOperationException(
-					"لم يتم العثور على إعداد اتصال GTSdbEntities في ملف إعدادات البرنامج.");
-
-			System.Data.Entity.Core.EntityClient.EntityConnectionStringBuilder entityBuilder =
-				new System.Data.Entity.Core.EntityClient.EntityConnectionStringBuilder(configured.ConnectionString);
-			System.Data.SqlClient.SqlConnectionStringBuilder providerBuilder =
-				new System.Data.SqlClient.SqlConnectionStringBuilder(entityBuilder.ProviderConnectionString);
-
-			LoginDetails.nameServer = providerBuilder.DataSource;
-			LoginDetails.databaseServer = providerBuilder.InitialCatalog;
-			LoginDetails.userNameServer = providerBuilder.UserID;
-			LoginDetails.passServer = providerBuilder.Password;
-			LoginDetails.ConnString = providerBuilder.ConnectionString;
+		try
+		{
+			LoadConnectionDetailsFromConfiguration();
 		}
 		catch (Exception ex)
 		{
 			MessageBox.Show(
-				"تعذر قراءة إعدادات الاتصال الحالية. تحقق من ERP.xml أو ملف إعدادات البرنامج.\r\n" + ex.Message,
+				"تعذر قراءة إعدادات الاتصال الحالية. تحقق من ملف إعدادات البرنامج.\r\n" + ex.Message,
 				"مستكشف البيانات",
 				MessageBoxButtons.OK,
 				MessageBoxIcon.Error,
 				MessageBoxDefaultButton.Button1,
 				MessageBoxOptions.RightAlign);
 		}
+	}
+
+	private void LoadSavedConnectionFromXml(string xmlPath)
+	{
+		XmlSerializer serializer = new XmlSerializer(typeof(List<SaveConnectionForXml>));
+		List<SaveConnectionForXml> settings;
+		using (FileStream stream = new FileStream(xmlPath, FileMode.Open, FileAccess.Read, FileShare.Read))
+		{
+			settings = (List<SaveConnectionForXml>)serializer.Deserialize(stream);
+		}
+
+		if (settings == null || settings.Count == 0 || settings[0] == null)
+			throw new InvalidDataException("ملف ERP.xml لا يحتوي على إعدادات اتصال.");
+
+		SaveConnectionForXml saved = settings[0];
+		if (string.IsNullOrWhiteSpace(saved._comboServer) ||
+			string.IsNullOrWhiteSpace(saved._comboDatabase))
+			throw new InvalidDataException("ملف ERP.xml لا يحتوي على اسم خادم وقاعدة بيانات صالحين.");
+
+		string userName = Class_Encryption.DecryptString(saved._TxtUser, "EF");
+		string password = Class_Encryption.DecryptString(saved._TxtPassword, "EF");
+		System.Data.SqlClient.SqlConnectionStringBuilder builder =
+			new System.Data.SqlClient.SqlConnectionStringBuilder
+			{
+				DataSource = saved._comboServer.Trim(),
+				InitialCatalog = saved._comboDatabase.Trim(),
+				UserID = userName,
+				Password = password,
+				PersistSecurityInfo = true,
+				MultipleActiveResultSets = true,
+				Encrypt = false,
+				TrustServerCertificate = true
+			};
+
+		LoginDetails.nameServer = builder.DataSource;
+		LoginDetails.databaseServer = builder.InitialCatalog;
+		LoginDetails.userNameServer = builder.UserID;
+		LoginDetails.passServer = builder.Password;
+		LoginDetails.ConnString = builder.ConnectionString;
+	}
+
+	private void LoadConnectionDetailsFromConfiguration()
+	{
+		System.Configuration.ConnectionStringSettings configured =
+			System.Configuration.ConfigurationManager.ConnectionStrings["GTSdbEntities"];
+		if (configured == null || string.IsNullOrWhiteSpace(configured.ConnectionString))
+			throw new InvalidOperationException(
+				"لم يتم العثور على إعداد اتصال GTSdbEntities في ملف إعدادات البرنامج.");
+
+		System.Data.Entity.Core.EntityClient.EntityConnectionStringBuilder entityBuilder =
+			new System.Data.Entity.Core.EntityClient.EntityConnectionStringBuilder(configured.ConnectionString);
+		System.Data.SqlClient.SqlConnectionStringBuilder providerBuilder =
+			new System.Data.SqlClient.SqlConnectionStringBuilder(entityBuilder.ProviderConnectionString);
+
+		LoginDetails.nameServer = providerBuilder.DataSource;
+		LoginDetails.databaseServer = providerBuilder.InitialCatalog;
+		LoginDetails.userNameServer = providerBuilder.UserID;
+		LoginDetails.passServer = providerBuilder.Password;
+		LoginDetails.ConnString = providerBuilder.ConnectionString;
 	}
 
 	private void GetPrintFromXml()
