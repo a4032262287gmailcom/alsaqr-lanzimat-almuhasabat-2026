@@ -157,7 +157,7 @@
 - تم فحص بنية مستودع GitHub وملفات المشروع والتنقل ومعالجات القائمة القديمة.
 - تمت مقارنة مسارات الاعتماديات الـ38 مع شجرة الملفات؛ 37 كانت في المجلد القديم غير الصحيح، وكل ملفاتها وُجدت ضمن مجلد الاعتماديات المضمن.
 - أُجري تحقق نصي من أن شاشة التنقل تحتوي خريطة صلاحيات صريحة وأنها تفحص الإذن قبل الفتح، وأن شاشة الاتصال لا تعرض نجاح حفظ XML قبل إتمام كتابة XML.
-- **نجح بناء Release فعليًا على عامل Windows في GitHub Actions**؛ نجحت خطوات Checkout وSetup .NET وRestore packages وBuild Release.
+- **نجح بناء Release فعليًا على عامل Windows في GitHub Actions**؛ نجحت خطوات Checkout وSetup .NET وRestore packages وBuild Release، وكانت النتيجة **0 أخطاء و457 تحذيرًا** (معظمها تحذيرات الحقول/المتغيرات المعينة وغير المستخدمة في ملفات النظام الحالية).
 - رابط تشغيل البناء: https://github.com/a4032262287gmailcom/alsaqr-lanzimat-almuhasabat-2026/actions/runs/38319226175
 - الإصلاحات محفوظة على فرع مستقل: `repair/erp-connection-permissions-20261013`.
 - طلب الدمج للمراجعة: https://github.com/a4032262287gmailcom/alsaqr-lanzimat-almuhasabat-2026/pull/2
