@@ -1,0 +1,40 @@
+﻿using System;
+
+namespace GTSErpSystem;
+
+public class Restaurant_Room
+{
+	public int SN { get; set; }
+
+	public int ID { get; set; }
+
+	public string Name { get; set; }
+
+	public bool? ISPause { get; set; }
+
+	public decimal? Money { get; set; }
+
+	public int? OrderID { get; set; }
+
+	public int? BranchID { get; set; }
+
+	public int? UserID_Add { get; set; }
+
+	public int? UserBranch_Add { get; set; }
+
+	public string UserMacAddress_Add { get; set; }
+
+	public DateTime? UserDate_Add { get; set; }
+
+	public int? UserID_Update { get; set; }
+
+	public int? UserBranch_Update { get; set; }
+
+	public string UserMacAddress_Update { get; set; }
+
+	public DateTime? UserDate_Update { get; set; }
+
+	public DateTime? Time1 { get; set; }
+}
+
+

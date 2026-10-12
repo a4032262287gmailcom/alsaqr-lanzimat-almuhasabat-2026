@@ -1,0 +1,508 @@
+﻿using System;
+using System.ComponentModel;
+using System.Data;
+using System.Data.SqlClient;
+using System.Drawing;
+using System.Drawing.Printing;
+using System.Globalization;
+using System.Linq;
+using System.Threading;
+using System.Windows.Forms;
+using DevExpress.Utils;
+using DevExpress.XtraEditors;
+using DevExpress.XtraEditors.Controls;
+using DevExpress.XtraEditors.Repository;
+using GTSErpSystem.BLL.Main;
+using GTSErpSystem.BLL.Security;
+using GTSErpSystem.DataSetRep;
+using GTSErpSystem.Frms.Account.Search;
+using GTSErpSystem.Frms.FrmsMain.Search;
+using Stimulsoft.Report;
+
+namespace GTSErpSystem.Frms.Transportation;
+
+public class FrmRPLeadgerCar : XtraForm
+{
+	private CheckPrvlg CheckPermession = new CheckPrvlg();
+
+	private string Server = LoginDetails.nameServer;
+
+	private string dataServer = LoginDetails.databaseServer;
+
+	private string userserver = LoginDetails.userNameServer;
+
+	private string passServer = LoginDetails.passServer;
+
+	public string FrmName;
+
+	private DataSetALL ST = new DataSetALL();
+
+	private IContainer components = null;
+
+	private GroupBox groupBox1;
+
+	private DateEdit TxtDate2;
+
+	private DateEdit TxtDate1;
+
+	private SimpleButton BtnContinue;
+
+	private SimpleButton BtnExit;
+
+	private ButtonEdit TxtAccount;
+
+	private Label LblAccount;
+
+	private TimeEdit TxtTime2;
+
+	private TimeEdit TxtTime1;
+
+	private Label label9;
+
+	private Label label1;
+
+	private Label label21;
+
+	private RadioButton RAllAmount;
+
+	private RadioButton RAmountBetDate;
+
+	private CheckBox ChPrintSend;
+
+	private Label label2;
+
+	public FrmRPLeadgerCar()
+	{
+		if (LoginDetails.Lang == "ar-EG")
+		{
+			Thread.CurrentThread.CurrentUICulture = CultureInfo.GetCultureInfo("ar-EG");
+		}
+		else
+		{
+			Thread.CurrentThread.CurrentUICulture = CultureInfo.GetCultureInfo("en-US");
+		}
+		InitializeComponent();
+		TxtDate1.Text = DateTime.Now.AddMonths(-1).ToString("yyyy/MM/dd");
+		TxtDate2.Text = DateTime.Now.ToString("yyyy/MM/dd");
+		TxtTime1.Text = "00:00:00";
+		TxtTime2.Text = "23:59:59";
+		TxtDate1.Focus();
+	}
+
+	private void TxtAccount_ButtonClick(object sender, ButtonPressedEventArgs e)
+	{
+		try
+		{
+			if (FrmName == "FrmCust")
+			{
+				FrmSearchAccountReceipts frmSearchAccountReceipts = new FrmSearchAccountReceipts();
+				frmSearchAccountReceipts.ShowDialog();
+				if (frmSearchAccountReceipts.CustCode > 0)
+				{
+					int custCode = frmSearchAccountReceipts.CustCode;
+					LblAccount.Text = custCode.ToString();
+					TxtAccount.Text = frmSearchAccountReceipts.AccountName;
+				}
+			}
+			else if (FrmName == "FrmSupp")
+			{
+				FrmSearchAccountPayment frmSearchAccountPayment = new FrmSearchAccountPayment();
+				frmSearchAccountPayment.ShowDialog();
+				if (frmSearchAccountPayment.CustCode > 0)
+				{
+					int custCode2 = frmSearchAccountPayment.CustCode;
+					LblAccount.Text = custCode2.ToString();
+					TxtAccount.Text = frmSearchAccountPayment.AccountName;
+				}
+			}
+			else
+			{
+				GTSErpSystem.Frms.FrmsMain.Search.FrmSearchAccount frmSearchAccount = new GTSErpSystem.Frms.FrmsMain.Search.FrmSearchAccount();
+				frmSearchAccount.ShowDialog();
+				if (frmSearchAccount.CustCode > 0)
+				{
+					int custCode3 = frmSearchAccount.CustCode;
+					LblAccount.Text = custCode3.ToString();
+					TxtAccount.Text = frmSearchAccount.AccountName;
+				}
+			}
+		}
+		catch (Exception)
+		{
+			LblAccount.Text = "1";
+			TxtAccount.Text = "";
+			TxtAccount.Focus();
+		}
+	}
+
+	private void Control_KeyDown(object sender, KeyEventArgs e)
+	{
+		if (e.KeyCode == Keys.Return)
+		{
+			SendKeys.Send("{TAB}");
+		}
+	}
+
+	private void TxtAccount_KeyDown(object sender, KeyEventArgs e)
+	{
+		if (e.KeyCode == Keys.Return)
+		{
+			BtnContinue.Focus();
+		}
+	}
+
+	private void BtnExit_Click(object sender, EventArgs e)
+	{
+		Close();
+	}
+
+	private void TxtNumberOnly_KeyPress(object sender, KeyPressEventArgs e)
+	{
+		if (!char.IsControl(e.KeyChar) && !char.IsDigit(e.KeyChar) && e.KeyChar != '.')
+		{
+			e.Handled = true;
+		}
+		if (e.KeyChar == '.' && (sender as TextBox).Text.IndexOf('.') > -1)
+		{
+			e.Handled = true;
+		}
+	}
+
+	private void ControlSave_KeyDown(object sender, KeyEventArgs e)
+	{
+		if (e.KeyCode == Keys.Return)
+		{
+			BtnContinue.Focus();
+		}
+	}
+
+	private void BtnContinue_Click(object sender, EventArgs e)
+	{
+		if (CheckPermession.CheckUserPageEventSave(LoginDetails.GroupID, 43))
+		{
+			if (Convert.ToDateTime(TxtDate2.Text) < Convert.ToDateTime(TxtDate1.Text))
+			{
+				MessageBox.Show("لايمكن ان يكون التاريخ الاول اكبر من التاريخ الثاني", "مستكشف الطباعة", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, MessageBoxDefaultButton.Button3, MessageBoxOptions.RightAlign);
+				TxtDate1.Focus();
+			}
+			else if (TxtAccount.Text != "")
+			{
+				SqlConnection sqlConnection = new SqlConnection("Data Source=" + Server + ";Initial Catalog=" + dataServer + ";Persist Security Info=True;User ID=" + userserver + ";Password=" + passServer);
+				ST.Tables["TableLadger"].Clear();
+				SqlCommand sqlCommand = new SqlCommand("Ledger_Account_Car", sqlConnection);
+				sqlCommand.CommandType = CommandType.StoredProcedure;
+				SqlDataAdapter sqlDataAdapter = new SqlDataAdapter(sqlCommand);
+				sqlCommand.Parameters.AddWithValue("@Date1", Convert.ToDateTime(TxtDate1.Text + " " + TxtTime1.Text));
+				sqlCommand.Parameters.AddWithValue("@Date2", Convert.ToDateTime(TxtDate2.Text + " " + TxtTime2.Text));
+				sqlCommand.Parameters.AddWithValue("@AccountID", Convert.ToInt32(LblAccount.Text));
+				sqlCommand.Parameters.AddWithValue("@TypeID", Convert.ToBoolean(RAllAmount.Checked));
+				sqlCommand.CommandTimeout = 999999;
+				sqlDataAdapter.Fill(ST.TableLadger);
+				sqlConnection.Close();
+				if (ST.Tables["TableLadger"].Rows.Count > 0)
+				{
+					StiReport stiReport = new StiReport();
+					if (LoginDetails.Lang == "ar-EG")
+					{
+						stiReport.Load(Application.StartupPath + "\\Reports\\ReportLedgerCar.mrt");
+					}
+					else
+					{
+						stiReport.Load(Application.StartupPath + "\\ReportsEN\\ReportLedgerCar.mrt");
+					}
+					stiReport.RegData(ST.TableLadger);
+					stiReport.Dictionary.Synchronize();
+					stiReport.Compile();
+					stiReport["CompanyAr"] = LoginDetails.CompanyNameAR;
+					stiReport["CompanyEn"] = LoginDetails.CompanyNameEN;
+					stiReport["VatNumComp"] = LoginDetails.VatNum;
+					stiReport["CommercialRegister"] = LoginDetails.CommercialRegister;
+					stiReport["Address"] = LoginDetails.Address;
+					stiReport["Phone"] = LoginDetails.Phone;
+					stiReport["Bank"] = LoginDetails.CompanyBank;
+					stiReport["Date1"] = Convert.ToDateTime(TxtDate1.Text);
+					stiReport["Date2"] = Convert.ToDateTime(TxtDate2.Text);
+					stiReport.Render();
+					stiReport.Show(dialogForm: true);
+				}
+				else
+				{
+					MessageBox.Show("لا يوجد سجلات متاحة للطباعة", "مستكشف الطباعة", MessageBoxButtons.OK, MessageBoxIcon.Hand, MessageBoxDefaultButton.Button3, MessageBoxOptions.RightAlign);
+				}
+			}
+			else
+			{
+				MessageBox.Show("يرجي اختيار رقم الحساب طŒ ثم حاول مرة اخري.", "مستكشف الطباعة", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, MessageBoxDefaultButton.Button3, MessageBoxOptions.RightAlign);
+			}
+		}
+		else
+		{
+			MessageBox.Show("عفوا، لايوجد لك صلاحية \r\n يرجي مراجعة مدير النظام لاعطائك صلاحية.", "مستكشف صلاحيات المستخدمين", MessageBoxButtons.OK, MessageBoxIcon.Hand, MessageBoxDefaultButton.Button3, MessageBoxOptions.RightAlign);
+		}
+		if (ChPrintSend.Checked)
+		{
+			DialogResult dialogResult = MessageBox.Show("هل أنت متأكد من طباعة كل الفواتير؟", "تأكيد الطباعة", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+			if (dialogResult == DialogResult.Yes)
+			{
+				PrintA4();
+				MessageBox.Show("تم طباعة الفواتير لعدد  ( " + ST.TableLadger.Count + " ) بنجاح", "نجاح الطباعة", MessageBoxButtons.OK, MessageBoxIcon.Asterisk, MessageBoxDefaultButton.Button3, MessageBoxOptions.RightAlign);
+			}
+		}
+	}
+
+	private void PrintA4()
+	{
+		if (ST.TableLadger.Count <= 0)
+		{
+			return;
+		}
+		foreach (DataSetALL.TableLadgerRow item in ST.TableLadger)
+		{
+			int value = Convert.ToInt32(item.OrderID);
+			if (!string.IsNullOrWhiteSpace(value.ToString()))
+			{
+				SqlConnection sqlConnection = new SqlConnection(LoginDetails.ConnString);
+				DataSetALL dataSetALL = new DataSetALL();
+				dataSetALL.Tables["ChangeOil"].Clear();
+				SqlCommand sqlCommand = new SqlCommand("Print_Car", sqlConnection);
+				sqlCommand.CommandType = CommandType.StoredProcedure;
+				SqlDataAdapter sqlDataAdapter = new SqlDataAdapter(sqlCommand);
+				sqlCommand.Parameters.AddWithValue("@Id", Convert.ToInt32(value));
+				sqlCommand.Parameters.AddWithValue("@IsDone", true);
+				sqlDataAdapter.Fill(dataSetALL.ChangeOil);
+				sqlConnection.Close();
+				if (dataSetALL.Tables["ChangeOil"].Rows.Count > 0)
+				{
+					StiReport stiReport = new StiReport();
+					if (LoginDetails.Lang == "ar-EG")
+					{
+						stiReport.Load(Application.StartupPath + "\\Reports\\PrintRecend.mrt");
+					}
+					else
+					{
+						stiReport.Load(Application.StartupPath + "\\ReportsEN\\PrintRecend.mrt");
+					}
+					stiReport.RegData(dataSetALL.ChangeOil);
+					stiReport.Dictionary.Synchronize();
+					stiReport.Compile();
+					stiReport["CompanyAr"] = LoginDetails.CompanyNameAR;
+					stiReport["CompanyEn"] = LoginDetails.CompanyNameEN;
+					stiReport["VatNumComp"] = LoginDetails.VatNum;
+					stiReport["CommercialRegister"] = LoginDetails.CommercialRegister;
+					stiReport["Address"] = LoginDetails.Address;
+					stiReport["Phone"] = LoginDetails.Phone;
+					DataSetALL.ChangeOilRow changeOilRow = dataSetALL.ChangeOil.FirstOrDefault();
+					Class_EncryptInvoice class_EncryptInvoice = new Class_EncryptInvoice();
+					string value2 = class_EncryptInvoice.GenerateQRBase64(LoginDetails.PrintComp, LoginDetails.VatNum, changeOilRow.Order_Date.ToString(), changeOilRow.SafyAmount.ToString(), changeOilRow.VatAmount.ToString());
+					stiReport["EncHash"] = value2;
+					PrinterSettings printerSettings = new PrinterSettings();
+					printerSettings.PrinterName = LoginDetails.DefualtPrintA4;
+					stiReport.Print(showPrintDialog: false, printerSettings);
+				}
+				else
+				{
+					MessageBox.Show("لا يوجد سجلات متاحة للطباعة", "مستكشف الطباعة", MessageBoxButtons.OK, MessageBoxIcon.Hand);
+				}
+			}
+			else
+			{
+				MessageBox.Show("عفوا، اختر رقم الفاتورة ثم حاول مرة اخري", "مستكشف صلاحيات المستخدمين", MessageBoxButtons.OK, MessageBoxIcon.Hand);
+			}
+		}
+	}
+
+	protected override void Dispose(bool disposing)
+	{
+		if (disposing && components != null)
+		{
+			components.Dispose();
+		}
+		base.Dispose(disposing);
+	}
+
+	private void InitializeComponent()
+	{
+		System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(GTSErpSystem.Frms.Transportation.FrmRPLeadgerCar));
+		DevExpress.XtraEditors.Controls.EditorButtonImageOptions editorButtonImageOptions = new DevExpress.XtraEditors.Controls.EditorButtonImageOptions();
+		DevExpress.Utils.SerializableAppearanceObject appearance = new DevExpress.Utils.SerializableAppearanceObject();
+		DevExpress.Utils.SerializableAppearanceObject appearanceHovered = new DevExpress.Utils.SerializableAppearanceObject();
+		DevExpress.Utils.SerializableAppearanceObject appearancePressed = new DevExpress.Utils.SerializableAppearanceObject();
+		DevExpress.Utils.SerializableAppearanceObject appearanceDisabled = new DevExpress.Utils.SerializableAppearanceObject();
+		this.groupBox1 = new System.Windows.Forms.GroupBox();
+		this.label2 = new System.Windows.Forms.Label();
+		this.ChPrintSend = new System.Windows.Forms.CheckBox();
+		this.RAllAmount = new System.Windows.Forms.RadioButton();
+		this.RAmountBetDate = new System.Windows.Forms.RadioButton();
+		this.label9 = new System.Windows.Forms.Label();
+		this.label1 = new System.Windows.Forms.Label();
+		this.label21 = new System.Windows.Forms.Label();
+		this.TxtTime2 = new DevExpress.XtraEditors.TimeEdit();
+		this.TxtTime1 = new DevExpress.XtraEditors.TimeEdit();
+		this.TxtAccount = new DevExpress.XtraEditors.ButtonEdit();
+		this.TxtDate2 = new DevExpress.XtraEditors.DateEdit();
+		this.TxtDate1 = new DevExpress.XtraEditors.DateEdit();
+		this.LblAccount = new System.Windows.Forms.Label();
+		this.BtnContinue = new DevExpress.XtraEditors.SimpleButton();
+		this.BtnExit = new DevExpress.XtraEditors.SimpleButton();
+		this.groupBox1.SuspendLayout();
+		((System.ComponentModel.ISupportInitialize)this.TxtTime2.Properties).BeginInit();
+		((System.ComponentModel.ISupportInitialize)this.TxtTime1.Properties).BeginInit();
+		((System.ComponentModel.ISupportInitialize)this.TxtAccount.Properties).BeginInit();
+		((System.ComponentModel.ISupportInitialize)this.TxtDate2.Properties.CalendarTimeProperties).BeginInit();
+		((System.ComponentModel.ISupportInitialize)this.TxtDate2.Properties).BeginInit();
+		((System.ComponentModel.ISupportInitialize)this.TxtDate1.Properties.CalendarTimeProperties).BeginInit();
+		((System.ComponentModel.ISupportInitialize)this.TxtDate1.Properties).BeginInit();
+		base.SuspendLayout();
+		resources.ApplyResources(this.groupBox1, "groupBox1");
+		this.groupBox1.Controls.Add(this.label2);
+		this.groupBox1.Controls.Add(this.ChPrintSend);
+		this.groupBox1.Controls.Add(this.RAllAmount);
+		this.groupBox1.Controls.Add(this.RAmountBetDate);
+		this.groupBox1.Controls.Add(this.label9);
+		this.groupBox1.Controls.Add(this.label1);
+		this.groupBox1.Controls.Add(this.label21);
+		this.groupBox1.Controls.Add(this.TxtTime2);
+		this.groupBox1.Controls.Add(this.TxtTime1);
+		this.groupBox1.Controls.Add(this.TxtAccount);
+		this.groupBox1.Controls.Add(this.TxtDate2);
+		this.groupBox1.Controls.Add(this.TxtDate1);
+		this.groupBox1.Name = "groupBox1";
+		this.groupBox1.TabStop = false;
+		resources.ApplyResources(this.label2, "label2");
+		this.label2.Name = "label2";
+		resources.ApplyResources(this.ChPrintSend, "ChPrintSend");
+		this.ChPrintSend.Name = "ChPrintSend";
+		this.ChPrintSend.UseVisualStyleBackColor = true;
+		resources.ApplyResources(this.RAllAmount, "RAllAmount");
+		this.RAllAmount.Checked = true;
+		this.RAllAmount.Name = "RAllAmount";
+		this.RAllAmount.TabStop = true;
+		this.RAllAmount.UseVisualStyleBackColor = true;
+		resources.ApplyResources(this.RAmountBetDate, "RAmountBetDate");
+		this.RAmountBetDate.Name = "RAmountBetDate";
+		this.RAmountBetDate.UseVisualStyleBackColor = true;
+		resources.ApplyResources(this.label9, "label9");
+		this.label9.Name = "label9";
+		resources.ApplyResources(this.label1, "label1");
+		this.label1.Name = "label1";
+		resources.ApplyResources(this.label21, "label21");
+		this.label21.Name = "label21";
+		resources.ApplyResources(this.TxtTime2, "TxtTime2");
+		this.TxtTime2.Name = "TxtTime2";
+		this.TxtTime2.Properties.Appearance.Font = (System.Drawing.Font)resources.GetObject("TxtTime2.Properties.Appearance.Font");
+		this.TxtTime2.Properties.Appearance.Options.UseFont = true;
+		this.TxtTime2.Properties.Appearance.Options.UseTextOptions = true;
+		this.TxtTime2.Properties.Appearance.TextOptions.HAlignment = DevExpress.Utils.HorzAlignment.Center;
+		this.TxtTime2.Properties.Buttons.AddRange(new DevExpress.XtraEditors.Controls.EditorButton[1]
+		{
+			new DevExpress.XtraEditors.Controls.EditorButton((DevExpress.XtraEditors.Controls.ButtonPredefines)resources.GetObject("TxtTime2.Properties.Buttons"))
+		});
+		this.TxtTime2.Properties.TimeEditStyle = DevExpress.XtraEditors.Repository.TimeEditStyle.TouchUI;
+		resources.ApplyResources(this.TxtTime1, "TxtTime1");
+		this.TxtTime1.Name = "TxtTime1";
+		this.TxtTime1.Properties.Appearance.Font = (System.Drawing.Font)resources.GetObject("TxtTime1.Properties.Appearance.Font");
+		this.TxtTime1.Properties.Appearance.Options.UseFont = true;
+		this.TxtTime1.Properties.Appearance.Options.UseTextOptions = true;
+		this.TxtTime1.Properties.Appearance.TextOptions.HAlignment = DevExpress.Utils.HorzAlignment.Center;
+		this.TxtTime1.Properties.Buttons.AddRange(new DevExpress.XtraEditors.Controls.EditorButton[1]
+		{
+			new DevExpress.XtraEditors.Controls.EditorButton((DevExpress.XtraEditors.Controls.ButtonPredefines)resources.GetObject("TxtTime1.Properties.Buttons"))
+		});
+		this.TxtTime1.Properties.TimeEditStyle = DevExpress.XtraEditors.Repository.TimeEditStyle.TouchUI;
+		resources.ApplyResources(this.TxtAccount, "TxtAccount");
+		this.TxtAccount.Name = "TxtAccount";
+		this.TxtAccount.Properties.Appearance.BackColor = System.Drawing.SystemColors.Window;
+		this.TxtAccount.Properties.Appearance.Font = (System.Drawing.Font)resources.GetObject("TxtAccount.Properties.Appearance.Font");
+		this.TxtAccount.Properties.Appearance.Options.UseBackColor = true;
+		this.TxtAccount.Properties.Appearance.Options.UseFont = true;
+		this.TxtAccount.Properties.Appearance.Options.UseTextOptions = true;
+		this.TxtAccount.Properties.Appearance.TextOptions.HAlignment = DevExpress.Utils.HorzAlignment.Center;
+		this.TxtAccount.Properties.Appearance.TextOptions.VAlignment = DevExpress.Utils.VertAlignment.Center;
+		this.TxtAccount.Properties.BorderStyle = DevExpress.XtraEditors.Controls.BorderStyles.HotFlat;
+		resources.ApplyResources(editorButtonImageOptions, "editorButtonImageOptions1");
+		this.TxtAccount.Properties.Buttons.AddRange(new DevExpress.XtraEditors.Controls.EditorButton[1]
+		{
+			new DevExpress.XtraEditors.Controls.EditorButton((DevExpress.XtraEditors.Controls.ButtonPredefines)resources.GetObject("TxtAccount.Properties.Buttons"), resources.GetString("TxtAccount.Properties.Buttons1"), (int)resources.GetObject("TxtAccount.Properties.Buttons2"), (bool)resources.GetObject("TxtAccount.Properties.Buttons3"), (bool)resources.GetObject("TxtAccount.Properties.Buttons4"), (bool)resources.GetObject("TxtAccount.Properties.Buttons5"), editorButtonImageOptions, new DevExpress.Utils.KeyShortcut(System.Windows.Forms.Keys.None), appearance, appearanceHovered, appearancePressed, appearanceDisabled, resources.GetString("TxtAccount.Properties.Buttons6"), resources.GetObject("TxtAccount.Properties.Buttons7"), (DevExpress.Utils.SuperToolTip)resources.GetObject("TxtAccount.Properties.Buttons8"), (DevExpress.Utils.ToolTipAnchor)resources.GetObject("TxtAccount.Properties.Buttons9"))
+		});
+		this.TxtAccount.Properties.ReadOnly = true;
+		this.TxtAccount.ButtonClick += new DevExpress.XtraEditors.Controls.ButtonPressedEventHandler(TxtAccount_ButtonClick);
+		this.TxtAccount.KeyDown += new System.Windows.Forms.KeyEventHandler(TxtAccount_KeyDown);
+		resources.ApplyResources(this.TxtDate2, "TxtDate2");
+		this.TxtDate2.Name = "TxtDate2";
+		this.TxtDate2.Properties.AllowNullInput = DevExpress.Utils.DefaultBoolean.False;
+		this.TxtDate2.Properties.Appearance.Font = (System.Drawing.Font)resources.GetObject("TxtDate2.Properties.Appearance.Font");
+		this.TxtDate2.Properties.Appearance.Options.UseFont = true;
+		this.TxtDate2.Properties.Appearance.Options.UseTextOptions = true;
+		this.TxtDate2.Properties.Appearance.TextOptions.HAlignment = DevExpress.Utils.HorzAlignment.Center;
+		this.TxtDate2.Properties.Buttons.AddRange(new DevExpress.XtraEditors.Controls.EditorButton[1]
+		{
+			new DevExpress.XtraEditors.Controls.EditorButton((DevExpress.XtraEditors.Controls.ButtonPredefines)resources.GetObject("TxtDate2.Properties.Buttons"))
+		});
+		this.TxtDate2.Properties.CalendarTimeProperties.Buttons.AddRange(new DevExpress.XtraEditors.Controls.EditorButton[1]
+		{
+			new DevExpress.XtraEditors.Controls.EditorButton((DevExpress.XtraEditors.Controls.ButtonPredefines)resources.GetObject("TxtDate2.Properties.CalendarTimeProperties.Buttons"))
+		});
+		this.TxtDate2.Properties.Mask.EditMask = resources.GetString("TxtDate2.Properties.Mask.EditMask");
+		this.TxtDate2.Properties.Mask.UseMaskAsDisplayFormat = (bool)resources.GetObject("TxtDate2.Properties.Mask.UseMaskAsDisplayFormat");
+		this.TxtDate2.Properties.TodayDate = new System.DateTime(2019, 6, 17, 21, 19, 56, 0);
+		this.TxtDate2.KeyDown += new System.Windows.Forms.KeyEventHandler(Control_KeyDown);
+		resources.ApplyResources(this.TxtDate1, "TxtDate1");
+		this.TxtDate1.Name = "TxtDate1";
+		this.TxtDate1.Properties.AllowNullInput = DevExpress.Utils.DefaultBoolean.False;
+		this.TxtDate1.Properties.Appearance.Font = (System.Drawing.Font)resources.GetObject("TxtDate1.Properties.Appearance.Font");
+		this.TxtDate1.Properties.Appearance.Options.UseFont = true;
+		this.TxtDate1.Properties.Appearance.Options.UseTextOptions = true;
+		this.TxtDate1.Properties.Appearance.TextOptions.HAlignment = DevExpress.Utils.HorzAlignment.Center;
+		this.TxtDate1.Properties.Buttons.AddRange(new DevExpress.XtraEditors.Controls.EditorButton[1]
+		{
+			new DevExpress.XtraEditors.Controls.EditorButton((DevExpress.XtraEditors.Controls.ButtonPredefines)resources.GetObject("TxtDate1.Properties.Buttons"))
+		});
+		this.TxtDate1.Properties.CalendarTimeProperties.Buttons.AddRange(new DevExpress.XtraEditors.Controls.EditorButton[1]
+		{
+			new DevExpress.XtraEditors.Controls.EditorButton((DevExpress.XtraEditors.Controls.ButtonPredefines)resources.GetObject("TxtDate1.Properties.CalendarTimeProperties.Buttons"))
+		});
+		this.TxtDate1.Properties.Mask.EditMask = resources.GetString("TxtDate1.Properties.Mask.EditMask");
+		this.TxtDate1.Properties.Mask.UseMaskAsDisplayFormat = (bool)resources.GetObject("TxtDate1.Properties.Mask.UseMaskAsDisplayFormat");
+		this.TxtDate1.KeyDown += new System.Windows.Forms.KeyEventHandler(Control_KeyDown);
+		resources.ApplyResources(this.LblAccount, "LblAccount");
+		this.LblAccount.Name = "LblAccount";
+		resources.ApplyResources(this.BtnContinue, "BtnContinue");
+		this.BtnContinue.Appearance.Font = (System.Drawing.Font)resources.GetObject("BtnContinue.Appearance.Font");
+		this.BtnContinue.Appearance.Options.UseFont = true;
+		this.BtnContinue.ImageOptions.Image = (System.Drawing.Image)resources.GetObject("BtnContinue.ImageOptions.Image");
+		this.BtnContinue.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.RightCenter;
+		this.BtnContinue.Name = "BtnContinue";
+		this.BtnContinue.Click += new System.EventHandler(BtnContinue_Click);
+		this.BtnContinue.KeyDown += new System.Windows.Forms.KeyEventHandler(Control_KeyDown);
+		resources.ApplyResources(this.BtnExit, "BtnExit");
+		this.BtnExit.Appearance.Font = (System.Drawing.Font)resources.GetObject("BtnExit.Appearance.Font");
+		this.BtnExit.Appearance.Options.UseFont = true;
+		this.BtnExit.ImageOptions.Image = (System.Drawing.Image)resources.GetObject("BtnExit.ImageOptions.Image");
+		this.BtnExit.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.RightCenter;
+		this.BtnExit.Name = "BtnExit";
+		this.BtnExit.Click += new System.EventHandler(BtnExit_Click);
+		this.BtnExit.KeyDown += new System.Windows.Forms.KeyEventHandler(Control_KeyDown);
+		resources.ApplyResources(this, "$this");
+		base.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+		base.Controls.Add(this.LblAccount);
+		base.Controls.Add(this.groupBox1);
+		base.Controls.Add(this.BtnContinue);
+		base.Controls.Add(this.BtnExit);
+		base.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
+		base.MaximizeBox = false;
+		base.Name = "FrmRPLeadgerCar";
+		this.groupBox1.ResumeLayout(false);
+		this.groupBox1.PerformLayout();
+		((System.ComponentModel.ISupportInitialize)this.TxtTime2.Properties).EndInit();
+		((System.ComponentModel.ISupportInitialize)this.TxtTime1.Properties).EndInit();
+		((System.ComponentModel.ISupportInitialize)this.TxtAccount.Properties).EndInit();
+		((System.ComponentModel.ISupportInitialize)this.TxtDate2.Properties.CalendarTimeProperties).EndInit();
+		((System.ComponentModel.ISupportInitialize)this.TxtDate2.Properties).EndInit();
+		((System.ComponentModel.ISupportInitialize)this.TxtDate1.Properties.CalendarTimeProperties).EndInit();
+		((System.ComponentModel.ISupportInitialize)this.TxtDate1.Properties).EndInit();
+		base.ResumeLayout(false);
+		base.PerformLayout();
+	}
+}
+
+

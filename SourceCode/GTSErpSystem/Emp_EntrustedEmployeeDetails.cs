@@ -1,0 +1,24 @@
+﻿using System;
+
+namespace GTSErpSystem;
+
+public class Emp_EntrustedEmployeeDetails
+{
+	public int SN { get; set; }
+
+	public int? EmpID { get; set; }
+
+	public int? EnterID { get; set; }
+
+	public decimal? EnterMoney { get; set; }
+
+	public string Note { get; set; }
+
+	public DateTime? DateEnter { get; set; }
+
+	public decimal? Quantity { get; set; }
+
+	public decimal? Total { get; set; }
+}
+
+

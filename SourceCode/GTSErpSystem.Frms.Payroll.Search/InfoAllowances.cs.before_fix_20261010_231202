@@ -1,0 +1,241 @@
+﻿using System;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Windows.Forms;
+using DevExpress.XtraEditors;
+using DevExpress.XtraGrid.Views.Base;
+using DevExpress.XtraGrid.Views.Grid;
+using الصقر لأنظمة المحاسبة.BLL.Payroll;
+using Janus.Windows.GridEX;
+
+namespace الصقر لأنظمة المحاسبة.Frms.Payroll.Search;
+
+public class InfoAllowances : XtraForm
+{
+	private Class_Employee Emp = new Class_Employee();
+
+	private DataTable dt = new DataTable();
+
+	private decimal NetAllowances;
+
+	private IContainer components = null;
+
+	private GridEX gridEX2;
+
+	private GroupBox groupBox1;
+
+	private SimpleButton BtnSave;
+
+	private GroupBox groupBox2;
+
+	public int EmpId { get; set; }
+
+	public InfoAllowances()
+	{
+		InitializeComponent();
+		Bind();
+	}
+
+	private void Bind()
+	{
+		try
+		{
+			if (LoginDetails.Lang == "ar-EG")
+			{
+				gridEX2.ColumnAutoResize = true;
+				dt.Columns.Clear();
+				dt.Columns.Add("ظƒظˆط¯", typeof(int));
+				dt.Columns.Add("ط§ط³ظ… ط§ظ„ط¨ط¯ظ„", typeof(string));
+				dt.Columns.Add("ط§ظ„ظ…ط¨ظ„ط؛", typeof(decimal));
+				dt.Columns.Add("ط­ط°ظپ", typeof(string));
+				gridEX2.SetDataBinding(dt, "");
+				gridEX2.RetrieveStructure();
+				gridEX2.RootTable.Columns["ظƒظˆط¯"].Width = 70;
+				gridEX2.RootTable.Columns["ظƒظˆط¯"].RightToLeft = RightToLeft.No;
+				gridEX2.RootTable.Columns["ظƒظˆط¯"].TextAlignment = TextAlignment.Center;
+				gridEX2.RootTable.Columns["ظƒظˆط¯"].EditType = EditType.NoEdit;
+				gridEX2.RootTable.Columns["ط§ط³ظ… ط§ظ„ط¨ط¯ظ„"].Width = 200;
+				gridEX2.RootTable.Columns["ط§ط³ظ… ط§ظ„ط¨ط¯ظ„"].TextAlignment = TextAlignment.Center;
+				gridEX2.RootTable.Columns["ط§ط³ظ… ط§ظ„ط¨ط¯ظ„"].EditType = EditType.NoEdit;
+				gridEX2.RootTable.Columns["ط§ظ„ظ…ط¨ظ„ط؛"].Width = 170;
+				gridEX2.RootTable.Columns["ط§ظ„ظ…ط¨ظ„ط؛"].TextAlignment = TextAlignment.Center;
+				gridEX2.RootTable.Columns["ط§ظ„ظ…ط¨ظ„ط؛"].FormatString = "0.##";
+				gridEX2.RootTable.Columns["ط§ظ„ظ…ط¨ظ„ط؛"].EditType = EditType.TextBox;
+				gridEX2.RootTable.Columns["ط­ط°ظپ"].Width = 80;
+				gridEX2.RootTable.Columns["ط­ط°ظپ"].ButtonStyle = ButtonStyle.ButtonCell;
+				gridEX2.RootTable.Columns["ط­ط°ظپ"].TextAlignment = TextAlignment.Center;
+				gridEX2.RootTable.Columns["ط­ط°ظپ"].Caption = "ط§ط²ط§ظ„ظ‡ ط§ظ„ط¨ط¯ظ„";
+				gridEX2.RootTable.Columns["ط­ط°ظپ"].EditType = EditType.NoEdit;
+				gridEX2.AllowEdit = InheritableBoolean.True;
+			}
+			else
+			{
+				gridEX2.ColumnAutoResize = true;
+				dt.Columns.Clear();
+				dt.Columns.Add("Code", typeof(int));
+				dt.Columns.Add("Name", typeof(string));
+				gridEX2.SetDataBinding(dt, "");
+				gridEX2.RetrieveStructure();
+				gridEX2.RootTable.Columns["Code"].Width = 30;
+				gridEX2.RootTable.Columns["Code"].RightToLeft = RightToLeft.No;
+				gridEX2.RootTable.Columns["Code"].TextAlignment = TextAlignment.Center;
+				gridEX2.RootTable.Columns["Name"].TextAlignment = TextAlignment.Center;
+			}
+		}
+		catch (Exception)
+		{
+		}
+	}
+
+	private void BindAllowances(int id)
+	{
+		DataTable employeeAllowances = Emp.GetEmployeeAllowances(id);
+		if (employeeAllowances.Rows.Count > 0)
+		{
+			foreach (DataRow row in employeeAllowances.Rows)
+			{
+				int AllowanceID = Convert.ToInt32(row["AllowanceID"]);
+				string text = row["AllowanceName"].ToString();
+				decimal num = Convert.ToDecimal(row["Money"]);
+				if (!dt.AsEnumerable().Any((DataRow r) => r.Field<int>("ظƒظˆط¯") == AllowanceID))
+				{
+					dt.Rows.Add(AllowanceID, text, num, "â‌Œ");
+				}
+			}
+		}
+		gridEX2.Refetch();
+	}
+
+	private void InfoAllowances_Load(object sender, EventArgs e)
+	{
+		BindAllowances(EmpId);
+	}
+
+	private void gridEX2_MouseClick(object sender, MouseEventArgs e)
+	{
+		GridEXRow currentRow = gridEX2.CurrentRow;
+		if (currentRow != null && currentRow.RowType == RowType.Record)
+		{
+			GridEXColumn currentColumn = gridEX2.CurrentColumn;
+			if (currentColumn != null && currentColumn.Key == "ط­ط°ظپ")
+			{
+				gridEX2.CurrentRow.Delete();
+			}
+		}
+	}
+
+	private void BtnSave_Click(object sender, EventArgs e)
+	{
+		if (gridEX2.DataSource is DataTable dataTable)
+		{
+			NetAllowances = ((dataTable.Compute("SUM(ط§ظ„ظ…ط¨ظ„ط؛)", "") != DBNull.Value) ? Convert.ToDecimal(dataTable.Compute("SUM(ط§ظ„ظ…ط¨ظ„ط؛)", "")) : 0m);
+		}
+		SetNetAllowances();
+		Close();
+	}
+
+	private void SetNetAllowances()
+	{
+		decimal num = Math.Round(Convert.ToDecimal(NetAllowances), 2);
+		if (base.Owner != null && base.Owner is FrmPayroll)
+		{
+			FrmPayroll frmPayroll = (FrmPayroll)base.Owner;
+			if (frmPayroll.gridControl1.MainView is GridView gridView)
+			{
+				CellValueChangedEventArgs e = new CellValueChangedEventArgs(gridView.FocusedRowHandle, gridView.FocusedColumn, num);
+				frmPayroll.UpdateAllowancesInGrid(e);
+			}
+		}
+		if (base.Owner != null && base.Owner is FrmPayrollTemp)
+		{
+			FrmPayrollTemp frmPayrollTemp = (FrmPayrollTemp)base.Owner;
+			if (frmPayrollTemp.gridControl1.MainView is GridView gridView2)
+			{
+				CellValueChangedEventArgs e2 = new CellValueChangedEventArgs(gridView2.FocusedRowHandle, gridView2.FocusedColumn, num);
+				frmPayrollTemp.UpdateAllowancesInGrid(e2);
+			}
+		}
+	}
+
+	protected override void Dispose(bool disposing)
+	{
+		if (disposing && components != null)
+		{
+			components.Dispose();
+		}
+		base.Dispose(disposing);
+	}
+
+	private void InitializeComponent()
+	{
+		System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(الصقر لأنظمة المحاسبة.Frms.Payroll.Search.InfoAllowances));
+		this.gridEX2 = new Janus.Windows.GridEX.GridEX();
+		this.groupBox1 = new System.Windows.Forms.GroupBox();
+		this.BtnSave = new DevExpress.XtraEditors.SimpleButton();
+		this.groupBox2 = new System.Windows.Forms.GroupBox();
+		((System.ComponentModel.ISupportInitialize)this.gridEX2).BeginInit();
+		this.groupBox1.SuspendLayout();
+		this.groupBox2.SuspendLayout();
+		base.SuspendLayout();
+		this.gridEX2.AllowCardSizing = false;
+		this.gridEX2.AllowColumnDrag = false;
+		this.gridEX2.AllowEdit = Janus.Windows.GridEX.InheritableBoolean.False;
+		this.gridEX2.AlternatingColors = true;
+		this.gridEX2.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
+		this.gridEX2.Font = new System.Drawing.Font("Tahoma", 9f);
+		this.gridEX2.GroupByBoxVisible = false;
+		this.gridEX2.GroupRowVisualStyle = Janus.Windows.GridEX.GroupRowVisualStyle.UseRowStyle;
+		this.gridEX2.HeaderFormatStyle.LineAlignment = Janus.Windows.GridEX.TextAlignment.Center;
+		this.gridEX2.HeaderFormatStyle.TextAlignment = Janus.Windows.GridEX.TextAlignment.Center;
+		this.gridEX2.Location = new System.Drawing.Point(6, 15);
+		this.gridEX2.Name = "gridEX2";
+		this.gridEX2.Size = new System.Drawing.Size(615, 320);
+		this.gridEX2.TabIndex = 34;
+		this.gridEX2.VisualStyle = Janus.Windows.GridEX.VisualStyle.VS2010;
+		this.gridEX2.VisualStyleAreas.HeadersStyle = Janus.Windows.GridEX.VisualStyle.Office2010;
+		this.gridEX2.MouseClick += new System.Windows.Forms.MouseEventHandler(gridEX2_MouseClick);
+		this.groupBox1.Controls.Add(this.gridEX2);
+		this.groupBox1.Location = new System.Drawing.Point(2, 1);
+		this.groupBox1.Name = "groupBox1";
+		this.groupBox1.Size = new System.Drawing.Size(627, 343);
+		this.groupBox1.TabIndex = 35;
+		this.groupBox1.TabStop = false;
+		this.BtnSave.ImageOptions.Image = (System.Drawing.Image)resources.GetObject("BtnSave.ImageOptions.Image");
+		this.BtnSave.ImageOptions.ImageToTextAlignment = DevExpress.XtraEditors.ImageAlignToText.RightCenter;
+		this.BtnSave.Location = new System.Drawing.Point(6, 12);
+		this.BtnSave.Margin = new System.Windows.Forms.Padding(4);
+		this.BtnSave.Name = "BtnSave";
+		this.BtnSave.Size = new System.Drawing.Size(616, 39);
+		this.BtnSave.TabIndex = 36;
+		this.BtnSave.Text = "ط§ط³طھظ…ط±ط§ط±";
+		this.BtnSave.Click += new System.EventHandler(BtnSave_Click);
+		this.groupBox2.Controls.Add(this.BtnSave);
+		this.groupBox2.Location = new System.Drawing.Point(2, 350);
+		this.groupBox2.Name = "groupBox2";
+		this.groupBox2.Size = new System.Drawing.Size(627, 56);
+		this.groupBox2.TabIndex = 36;
+		this.groupBox2.TabStop = false;
+		base.AutoScaleDimensions = new System.Drawing.SizeF(7f, 16f);
+		base.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+		base.ClientSize = new System.Drawing.Size(634, 411);
+		base.Controls.Add(this.groupBox2);
+		base.Controls.Add(this.groupBox1);
+		base.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
+		base.MaximizeBox = false;
+		base.MinimizeBox = false;
+		base.Name = "InfoAllowances";
+		this.RightToLeft = System.Windows.Forms.RightToLeft.Yes;
+		this.RightToLeftLayout = true;
+		base.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
+		this.Text = "ط¨ط¯ظ„ط§طھ ط§ظ„ظ…ظˆط¸ظپ";
+		base.Load += new System.EventHandler(InfoAllowances_Load);
+		((System.ComponentModel.ISupportInitialize)this.gridEX2).EndInit();
+		this.groupBox1.ResumeLayout(false);
+		this.groupBox2.ResumeLayout(false);
+		base.ResumeLayout(false);
+	}
+}
+
+

@@ -1,0 +1,4 @@
+﻿Alsaqr ERP - BuildUnifiedLoginFix
+Project: GTSErpSystem.csproj
+Approved executable SHA256: 5D1BAE006169910CD26BF7C52D87FB8F1C297B11AE6A4A25E2FCA59B783A551C
+Build package: buildunified-loginfix-2026-10-13

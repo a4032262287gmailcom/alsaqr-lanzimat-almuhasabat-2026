@@ -1,0 +1,70 @@
+﻿using System;
+
+namespace GTSErpSystem;
+
+public class Report_CloseDayByUser_Result
+{
+	public int SN { get; set; }
+
+	public int? UserID { get; set; }
+
+	public string UserName { get; set; }
+
+	public string Note { get; set; }
+
+	public DateTime? DateOpen { get; set; }
+
+	public DateTime? DateClose { get; set; }
+
+	public decimal? TotalOrderCash { get; set; }
+
+	public decimal? TotalOrderCashReturn { get; set; }
+
+	public decimal? NetOrderCash { get; set; }
+
+	public decimal? TotalOrderAjil { get; set; }
+
+	public decimal? TotalOrderAjilReturn { get; set; }
+
+	public decimal? NetOrderAjil { get; set; }
+
+	public decimal? TotalPurshesCash { get; set; }
+
+	public decimal? TotalPurshesCashReturn { get; set; }
+
+	public decimal? NetPurshesCash { get; set; }
+
+	public decimal? TotalPurshesAjil { get; set; }
+
+	public decimal? TotalPurshesAjilReturn { get; set; }
+
+	public decimal? NetPurshesAjil { get; set; }
+
+	public decimal? TransferToBranchCash { get; set; }
+
+	public decimal? TransferToBranchAjil { get; set; }
+
+	public decimal? TransferFromBranchCash { get; set; }
+
+	public decimal? TransferFromBranchAjil { get; set; }
+
+	public decimal? CashMoney { get; set; }
+
+	public decimal? CashBank { get; set; }
+
+	public decimal? TotalRecipt { get; set; }
+
+	public decimal? TotalPayment { get; set; }
+
+	public decimal? NetRecipt { get; set; }
+
+	public decimal? NetPayment { get; set; }
+
+	public decimal? Safy { get; set; }
+
+	public decimal? MoneyOpen { get; set; }
+
+	public decimal? SafyWithoutOpenMoney { get; set; }
+}
+
+

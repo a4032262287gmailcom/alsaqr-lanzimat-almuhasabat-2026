@@ -1,0 +1,96 @@
+﻿using System;
+
+namespace GTSErpSystem;
+
+public class Select_Virgins_Result
+{
+	public int ID { get; set; }
+
+	public int? CustID { get; set; }
+
+	public string CustName { get; set; }
+
+	public int SN { get; set; }
+
+	public int? MasterID { get; set; }
+
+	public DateTime? Date { get; set; }
+
+	public string Serial { get; set; }
+
+	public DateTime? DateCreate { get; set; }
+
+	public DateTime? DateTo { get; set; }
+
+	public string VirgDue { get; set; }
+
+	public int? CompID { get; set; }
+
+	public int? VirgID { get; set; }
+
+	public int? VirgTypeID { get; set; }
+
+	public int? MarkterID { get; set; }
+
+	public string CompName { get; set; }
+
+	public string VirgName { get; set; }
+
+	public string TypeName { get; set; }
+
+	public string UserName { get; set; }
+
+	public int? NumDays { get; set; }
+
+	public int? NumCopys { get; set; }
+
+	public int? NumMessage { get; set; }
+
+	public bool? AlertMessage { get; set; }
+
+	public bool? AlertClose { get; set; }
+
+	public string HDD { get; set; }
+
+	public string Mac { get; set; }
+
+	public string SerialBoard { get; set; }
+
+	public string Active { get; set; }
+
+	public string Trial { get; set; }
+
+	public int? OrderFranchiseType { get; set; }
+
+	public bool? ShowVirginInLogin { get; set; }
+
+	public int? NPermission { get; set; }
+
+	public int? UserID_Add { get; set; }
+
+	public int? UserBranch_Add { get; set; }
+
+	public string UserMacAddress_Add { get; set; }
+
+	public DateTime? UserDate_Add { get; set; }
+
+	public int? UserID_Update { get; set; }
+
+	public int? UserBranch_Update { get; set; }
+
+	public string UserMacAddress_Update { get; set; }
+
+	public DateTime? UserDate_Update { get; set; }
+
+	public bool? OrderVirgin { get; set; }
+
+	public string DeviceName { get; set; }
+
+	public string Notes { get; set; }
+
+	public int? StatuseID { get; set; }
+
+	public int? AppTypeID { get; set; }
+}
+
+

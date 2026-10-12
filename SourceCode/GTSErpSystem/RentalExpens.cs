@@ -1,0 +1,34 @@
+﻿using System;
+
+namespace GTSErpSystem;
+
+public class RentalExpens
+{
+	public int Id { get; set; }
+
+	public DateTime? Date { get; set; }
+
+	public decimal? TotalPrice { get; set; }
+
+	public decimal? AllTax { get; set; }
+
+	public decimal? NetTotalPrice { get; set; }
+
+	public int? UserID_Add { get; set; }
+
+	public int? UserBranch_Add { get; set; }
+
+	public string UserMacAddress_Add { get; set; }
+
+	public DateTime? UserDate_Add { get; set; }
+
+	public int? UserID_Update { get; set; }
+
+	public int? UserBranch_Update { get; set; }
+
+	public string UserMacAddress_Update { get; set; }
+
+	public DateTime? UserDate_Update { get; set; }
+}
+
+

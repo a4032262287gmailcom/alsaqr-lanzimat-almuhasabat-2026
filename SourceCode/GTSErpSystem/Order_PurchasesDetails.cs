@@ -1,0 +1,48 @@
+﻿namespace GTSErpSystem;
+
+public class Order_PurchasesDetails
+{
+	public int SN { get; set; }
+
+	public int? Purchese_ID { get; set; }
+
+	public int? ItemID { get; set; }
+
+	public int? BranchID { get; set; }
+
+	public int? StoreID { get; set; }
+
+	public int? ItemUnitID { get; set; }
+
+	public decimal? Quantity { get; set; }
+
+	public decimal? UnitPrice { get; set; }
+
+	public decimal? TotalPrice { get; set; }
+
+	public decimal? VAT { get; set; }
+
+	public decimal? NetUnitPrice { get; set; }
+
+	public decimal? NetTotalPrice { get; set; }
+
+	public decimal? VAT_Discount { get; set; }
+
+	public string ItemUnitType { get; set; }
+
+	public decimal? Bounce { get; set; }
+
+	public string NoteItem { get; set; }
+
+	public decimal? UnitNumber { get; set; }
+
+	public decimal? SellPrice { get; set; }
+
+	public decimal? DiscNum { get; set; }
+
+	public decimal? DiscPercent { get; set; }
+
+	public virtual Item_Unit Item_Unit { get; set; }
+}
+
+

@@ -1,0 +1,34 @@
+﻿using System;
+
+namespace GTSErpSystem;
+
+public class Emp_Payroll
+{
+	public int ID { get; set; }
+
+	public DateTime? PayrollDate { get; set; }
+
+	public string Note { get; set; }
+
+	public string NumNote { get; set; }
+
+	public int? Branch_ID { get; set; }
+
+	public int? UserID_Add { get; set; }
+
+	public int? UserBranch_Add { get; set; }
+
+	public string UserMacAddress_Add { get; set; }
+
+	public DateTime? UserDate_Add { get; set; }
+
+	public int? UserID_Update { get; set; }
+
+	public int? UserBranch_Update { get; set; }
+
+	public string UserMacAddress_Update { get; set; }
+
+	public DateTime? UserDate_Update { get; set; }
+}
+
+

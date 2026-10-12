@@ -1,0 +1,50 @@
+﻿using System;
+
+namespace GTSErpSystem;
+
+public class TempBudget
+{
+	public decimal TranSn { get; set; }
+
+	public decimal? Account_Sn { get; set; }
+
+	public decimal? Account_No { get; set; }
+
+	public short? TranTypeID { get; set; }
+
+	public string TranCode { get; set; }
+
+	public DateTime? TranDate { get; set; }
+
+	public string TranTypeDesc { get; set; }
+
+	public string Note { get; set; }
+
+	public decimal? ReferenceCode { get; set; }
+
+	public string TranDesc { get; set; }
+
+	public decimal? Debit { get; set; }
+
+	public decimal? Credit { get; set; }
+
+	public decimal? Priv_Debit { get; set; }
+
+	public decimal? Priv_Credit { get; set; }
+
+	public decimal? SumValues { get; set; }
+
+	public decimal? Balance { get; set; }
+
+	public string Account_Name { get; set; }
+
+	public short? AccounIindex { get; set; }
+
+	public string ReceivedFrom { get; set; }
+
+	public int? BranchID { get; set; }
+
+	public int? UserID { get; set; }
+}
+
+

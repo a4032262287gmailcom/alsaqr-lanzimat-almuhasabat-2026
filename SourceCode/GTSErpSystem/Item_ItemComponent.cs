@@ -1,0 +1,28 @@
+﻿namespace GTSErpSystem;
+
+public class Item_ItemComponent
+{
+	public int SN { get; set; }
+
+	public int? ItemID_Master { get; set; }
+
+	public int? ItemID_Complant { get; set; }
+
+	public decimal? Amount { get; set; }
+
+	public int? User_Add { get; set; }
+
+	public string User_MacAddress { get; set; }
+
+	public int? StoreID { get; set; }
+
+	public int? ItemUnitID { get; set; }
+
+	public decimal? SmallUnitPrice { get; set; }
+
+	public decimal? TotalPrice { get; set; }
+
+	public string ItemUnitType { get; set; }
+}
+
+
