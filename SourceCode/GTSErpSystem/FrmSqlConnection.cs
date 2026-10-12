@@ -69,85 +69,195 @@ public class FrmSqlConnection : XtraForm
 		comboServerName.Focus();
 	}
 
-	private void BtnConnection_Click(object sender, EventArgs e)
+		private void BtnConnection_Click(object sender, EventArgs e)
 	{
-		if (comboServerName.Text != "" && TxtUser.Text != "" && TxtPassword.Text != "")
+		if (string.IsNullOrWhiteSpace(comboServerName.Text) ||
+			string.IsNullOrWhiteSpace(TxtUser.Text) ||
+			string.IsNullOrEmpty(TxtPassword.Text))
 		{
-			try
-			{
-				ConnectionString = "Data Source = " + comboServerName.Text + ";User Id=" + TxtUser.Text + ";Password=" + TxtPassword.Text;
-				Conn = new SqlConnection(ConnectionString);
-				Conn.Open();
-				sql = "SELECT * FROM sys.databases d where d.database_id > 4 AND   d.name NOT LIKE 'ReportServer'AND  d.name NOT LIKE 'ReportServerTempDB' ORDER BY d.create_date DESC ";
-				Command = new SqlCommand(sql, Conn);
-				Reader = Command.ExecuteReader();
-				comboDatabaseName.Properties.Items.Clear();
-				while (Reader.Read())
-				{
-					comboDatabaseName.Properties.Items.Add(Reader[0].ToString());
-				}
-				MessageBox.Show("تم الاتصال بنجاح", "مستكشف الاتصال", MessageBoxButtons.OK, MessageBoxIcon.Asterisk, MessageBoxDefaultButton.Button3, MessageBoxOptions.RightAlign);
-				return;
-			}
-			catch (Exception ex)
-			{
-				MessageBox.Show(ex.Message);
-				return;
-			}
+			MessageBox.Show(
+				"عفوًا، أدخل اسم الخادم واسم المستخدم وكلمة المرور.",
+				"مستكشف الاتصال",
+				MessageBoxButtons.OK,
+				MessageBoxIcon.Warning,
+				MessageBoxDefaultButton.Button1,
+				MessageBoxOptions.RightAlign);
+			TxtUser.Focus();
+			return;
 		}
-		MessageBox.Show("عفوا، يرجي ادخال البيانات بشكل صحيح", "مستكشف الاتصال", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, MessageBoxDefaultButton.Button3, MessageBoxOptions.RightAlign);
-		TxtUser.Focus();
-	}
 
-	private void GetAllServer()
-	{
-		DataTable dataSources = SqlDataSourceEnumerator.Instance.GetDataSources();
-		foreach (DataRow row in dataSources.Rows)
-		{
-			if (!comboServerName.Items.Contains(row[dataSources.Columns["ServerName"]].ToString()))
-			{
-				comboServerName.Items.Add(row[dataSources.Columns["ServerName"]].ToString());
-			}
-		}
-	}
-
-	private void InsertDataInToXml()
-	{
 		try
 		{
-			XmlSerializer xmlSerializer = new XmlSerializer(typeof(List<SaveConnectionForXml>));
-			List<SaveConnectionForXml> list = new List<SaveConnectionForXml>();
-			FileStream fileStream = new FileStream(Application.StartupPath + "\\ERP.xml", FileMode.Create, FileAccess.Write);
-			SaveConnectionForXml saveConnectionForXml = new SaveConnectionForXml();
-			saveConnectionForXml._comboServer = comboServerName.Text;
-			saveConnectionForXml._comboDatabase = comboDatabaseName.Text;
-			saveConnectionForXml._TxtUser = Class_Encryption.EncryptString(TxtUser.Text, "EF");
-			saveConnectionForXml._TxtPassword = Class_Encryption.EncryptString(TxtPassword.Text, "EF");
-			list.Add(saveConnectionForXml);
-			xmlSerializer.Serialize(fileStream, list);
-			fileStream.Close();
+			SqlConnectionStringBuilder builder = new SqlConnectionStringBuilder
+			{
+				DataSource = comboServerName.Text.Trim(),
+				UserID = TxtUser.Text,
+				Password = TxtPassword.Text,
+				PersistSecurityInfo = true,
+				ConnectTimeout = 5,
+				Encrypt = false,
+				TrustServerCertificate = true
+			};
+			ConnectionString = builder.ConnectionString;
+
+			comboDatabaseName.Properties.Items.Clear();
+			using (SqlConnection connection = new SqlConnection(ConnectionString))
+			{
+				connection.Open();
+				const string query = "SELECT name FROM sys.databases " +
+					"WHERE database_id > 4 AND name NOT IN ('ReportServer', 'ReportServerTempDB') " +
+					"ORDER BY create_date DESC";
+
+				using (SqlCommand command = new SqlCommand(query, connection))
+				using (SqlDataReader reader = command.ExecuteReader())
+				{
+					while (reader.Read())
+						comboDatabaseName.Properties.Items.Add(reader["name"].ToString());
+				}
+			}
+
+			MessageBox.Show(
+				"تم الاتصال بالخادم بنجاح. اختر قاعدة البيانات المطلوبة ثم احفظ الإعدادات.",
+				"مستكشف الاتصال",
+				MessageBoxButtons.OK,
+				MessageBoxIcon.Information,
+				MessageBoxDefaultButton.Button1,
+				MessageBoxOptions.RightAlign);
 		}
 		catch (Exception ex)
 		{
-			MessageBox.Show(ex.Message, "مستكشف البيانات", MessageBoxButtons.OK, MessageBoxIcon.Hand);
+			MessageBox.Show(
+				"تعذر الاتصال بالخادم أو قراءة قواعد البيانات. تحقق من اسم الخادم وصلاحيات الحساب.\r\n" + ex.Message,
+				"مستكشف الاتصال",
+				MessageBoxButtons.OK,
+				MessageBoxIcon.Error,
+				MessageBoxDefaultButton.Button1,
+				MessageBoxOptions.RightAlign);
 		}
 	}
 
-	private void BtnSave_Click(object sender, EventArgs e)
+		private int GetAllServer()
 	{
-		if (comboServerName.Text != "" && TxtUser.Text != "" && TxtPassword.Text != "" && comboDatabaseName.Text != "")
+		int added = 0;
+		DataTable dataSources = SqlDataSourceEnumerator.Instance.GetDataSources();
+		foreach (DataRow row in dataSources.Rows)
 		{
-			InsertDataInToXml();
-			MessageBox.Show("تم الحفظ اعدادات الاتصال بنجاح طŒ يرجي تشغيل البرنامج من جديد", "مستكشف البيانات", MessageBoxButtons.OK, MessageBoxIcon.Asterisk, MessageBoxDefaultButton.Button3, MessageBoxOptions.RightAlign);
-			SoundPlayer soundPlayer = new System.Media.SoundPlayer(System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "SERIAL.WAV"));
-			soundPlayer.Play();
-			Application.Exit();
-			Process.Start("الصقر لأنظمة المحاسبة.exe");
+			string serverName = Convert.ToString(row[dataSources.Columns["ServerName"]]);
+			string instanceName = dataSources.Columns.Contains("InstanceName")
+				? Convert.ToString(row[dataSources.Columns["InstanceName"]])
+				: string.Empty;
+
+			if (string.IsNullOrWhiteSpace(serverName))
+				continue;
+
+			string fullName = string.IsNullOrWhiteSpace(instanceName)
+				? serverName
+				: serverName + "\\" + instanceName;
+
+			if (!comboServerName.Items.Contains(fullName))
+			{
+				comboServerName.Items.Add(fullName);
+				added++;
+			}
 		}
-		else
+		return added;
+	}
+
+		private bool InsertDataInToXml()
+	{
+		string xmlPath = Path.Combine(Application.StartupPath, "ERP.xml");
+		string tempPath = xmlPath + ".tmp";
+		try
 		{
-			MessageBox.Show("عفوا، يرجي ادخال كافة البيانات المطلوبة بشكل صحيح", "مستكشف الاتصال", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, MessageBoxDefaultButton.Button3, MessageBoxOptions.RightAlign);
+			XmlSerializer serializer = new XmlSerializer(typeof(List<SaveConnectionForXml>));
+			SaveConnectionForXml settings = new SaveConnectionForXml
+			{
+				_comboServer = comboServerName.Text.Trim(),
+				_comboDatabase = comboDatabaseName.Text.Trim(),
+				_TxtUser = Class_Encryption.EncryptString(TxtUser.Text, "EF"),
+				_TxtPassword = Class_Encryption.EncryptString(TxtPassword.Text, "EF")
+			};
+
+			using (FileStream stream = new FileStream(tempPath, FileMode.Create, FileAccess.Write, FileShare.None))
+			{
+				serializer.Serialize(stream, new List<SaveConnectionForXml> { settings });
+				stream.Flush(true);
+			}
+
+			if (File.Exists(xmlPath))
+				File.Replace(tempPath, xmlPath, null);
+			else
+				File.Move(tempPath, xmlPath);
+
+			return true;
+		}
+		catch (Exception ex)
+		{
+			try
+			{
+				if (File.Exists(tempPath))
+					File.Delete(tempPath);
+			}
+			catch
+			{
+			}
+
+			MessageBox.Show(
+				"تعذر حفظ إعدادات الاتصال. لم يتم إعلان النجاح.\r\n" + ex.Message,
+				"مستكشف الاتصال",
+				MessageBoxButtons.OK,
+				MessageBoxIcon.Error,
+				MessageBoxDefaultButton.Button1,
+				MessageBoxOptions.RightAlign);
+			return false;
+		}
+	}
+
+		private void BtnSave_Click(object sender, EventArgs e)
+	{
+		if (string.IsNullOrWhiteSpace(comboServerName.Text) ||
+			string.IsNullOrWhiteSpace(TxtUser.Text) ||
+			string.IsNullOrEmpty(TxtPassword.Text) ||
+			string.IsNullOrWhiteSpace(comboDatabaseName.Text))
+		{
+			MessageBox.Show(
+				"عفوًا، أدخل الخادم والمستخدم وكلمة المرور واختر قاعدة البيانات.",
+				"مستكشف الاتصال",
+				MessageBoxButtons.OK,
+				MessageBoxIcon.Warning,
+				MessageBoxDefaultButton.Button1,
+				MessageBoxOptions.RightAlign);
 			comboDatabaseName.Focus();
+			return;
+		}
+
+		// Do not report success or restart unless the XML was written successfully.
+		if (!InsertDataInToXml())
+			return;
+
+		MessageBox.Show(
+			"تم حفظ إعدادات الاتصال بنجاح. سيُعاد تشغيل البرنامج لتطبيقها.",
+			"مستكشف الاتصال",
+			MessageBoxButtons.OK,
+			MessageBoxIcon.Information,
+			MessageBoxDefaultButton.Button1,
+			MessageBoxOptions.RightAlign);
+
+		try
+		{
+			string executablePath = Application.ExecutablePath;
+			Process.Start(new ProcessStartInfo(executablePath) { UseShellExecute = true });
+			Application.Exit();
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(
+				"تم حفظ إعدادات الاتصال، لكن تعذر إعادة تشغيل البرنامج تلقائيًا. أغلق البرنامج وشغّله يدويًا.\r\n" + ex.Message,
+				"إعدادات الاتصال",
+				MessageBoxButtons.OK,
+				MessageBoxIcon.Warning,
+				MessageBoxDefaultButton.Button1,
+				MessageBoxOptions.RightAlign);
 		}
 	}
 
@@ -198,10 +308,42 @@ public class FrmSqlConnection : XtraForm
 	{
 	}
 
-	private void BtnSearch_Click(object sender, EventArgs e)
+		private void BtnSearch_Click(object sender, EventArgs e)
 	{
-		GetAllServer();
-		MessageBox.Show("تم الاتصال بنجاح", "مستكشف الاتصال", MessageBoxButtons.OK, MessageBoxIcon.Asterisk, MessageBoxDefaultButton.Button3, MessageBoxOptions.RightAlign);
+		try
+		{
+			int added = GetAllServer();
+			if (added > 0)
+			{
+				MessageBox.Show(
+					"تم العثور على " + added + " خادم/خوادم. اختر الخادم أو اكتب اسمه يدويًا.",
+					"مستكشف الاتصال",
+					MessageBoxButtons.OK,
+					MessageBoxIcon.Information,
+					MessageBoxDefaultButton.Button1,
+					MessageBoxOptions.RightAlign);
+			}
+			else
+			{
+				MessageBox.Show(
+					"لم يتم العثور على خوادم تلقائيًا. يمكنك كتابة اسم الخادم يدويًا، مثل .\\SQLEXPRESS.",
+					"مستكشف الاتصال",
+					MessageBoxButtons.OK,
+					MessageBoxIcon.Warning,
+					MessageBoxDefaultButton.Button1,
+					MessageBoxOptions.RightAlign);
+			}
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(
+				"تعذر اكتشاف الخوادم تلقائيًا. اكتب اسم الخادم يدويًا إذا كان معروفًا.\r\n" + ex.Message,
+				"مستكشف الاتصال",
+				MessageBoxButtons.OK,
+				MessageBoxIcon.Warning,
+				MessageBoxDefaultButton.Button1,
+				MessageBoxOptions.RightAlign);
+		}
 	}
 
 	private void BindServer()
@@ -224,6 +366,7 @@ public class FrmSqlConnection : XtraForm
 				text3 = Class_Encryption.DecryptString(saveConnectionForXml._TxtPassword, "EF");
 				text4 = saveConnectionForXml._comboDatabase;
 				comboServerName.Text = text;
+				comboDatabaseName.Text = text4;
 				TxtUser.Text = text2;
 				TxtPassword.Text = text3;
 				fileStream.Close();
