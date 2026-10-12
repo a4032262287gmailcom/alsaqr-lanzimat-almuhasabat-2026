@@ -346,34 +346,39 @@ public class FrmSqlConnection : XtraForm
 		}
 	}
 
-	private void BindServer()
+		private void BindServer()
 	{
-		string text = "";
-		string text2 = "";
-		string text3 = "";
-		string text4 = "";
+		string xmlPath = Path.Combine(Application.StartupPath, "ERP.xml");
+		if (!File.Exists(xmlPath))
+			return;
+
 		try
 		{
-			XmlSerializer xmlSerializer = new XmlSerializer(typeof(List<SaveConnectionForXml>));
-			List<SaveConnectionForXml> list = new List<SaveConnectionForXml>();
-			if (File.Exists(Application.StartupPath + "\\ERP.xml"))
+			XmlSerializer serializer = new XmlSerializer(typeof(List<SaveConnectionForXml>));
+			List<SaveConnectionForXml> settings;
+			using (FileStream stream = new FileStream(xmlPath, FileMode.Open, FileAccess.Read, FileShare.Read))
 			{
-				FileStream fileStream = new FileStream(Application.StartupPath + "\\ERP.xml", FileMode.Open, FileAccess.Read);
-				list = (List<SaveConnectionForXml>)xmlSerializer.Deserialize(fileStream);
-				SaveConnectionForXml saveConnectionForXml = list[0];
-				text = saveConnectionForXml._comboServer;
-				text2 = Class_Encryption.DecryptString(saveConnectionForXml._TxtUser, "EF");
-				text3 = Class_Encryption.DecryptString(saveConnectionForXml._TxtPassword, "EF");
-				text4 = saveConnectionForXml._comboDatabase;
-				comboServerName.Text = text;
-				comboDatabaseName.Text = text4;
-				TxtUser.Text = text2;
-				TxtPassword.Text = text3;
-				fileStream.Close();
+				settings = (List<SaveConnectionForXml>)serializer.Deserialize(stream);
 			}
+
+			if (settings == null || settings.Count == 0 || settings[0] == null)
+				throw new InvalidDataException("ملف ERP.xml لا يحتوي على إعدادات اتصال.");
+
+			SaveConnectionForXml saved = settings[0];
+			comboServerName.Text = saved._comboServer;
+			comboDatabaseName.Text = saved._comboDatabase;
+			TxtUser.Text = Class_Encryption.DecryptString(saved._TxtUser, "EF");
+			TxtPassword.Text = Class_Encryption.DecryptString(saved._TxtPassword, "EF");
 		}
-		catch (Exception)
+		catch (Exception ex)
 		{
+			MessageBox.Show(
+				"تعذر قراءة إعدادات الاتصال المحفوظة من ERP.xml. يمكنك تصحيحها ثم حفظها من جديد.\r\n" + ex.Message,
+				"مستكشف الاتصال",
+				MessageBoxButtons.OK,
+				MessageBoxIcon.Warning,
+				MessageBoxDefaultButton.Button1,
+				MessageBoxOptions.RightAlign);
 		}
 	}
 
