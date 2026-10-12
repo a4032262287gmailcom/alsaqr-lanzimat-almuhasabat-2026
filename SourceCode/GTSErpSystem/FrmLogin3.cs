@@ -523,25 +523,71 @@ public class FrmLogin3 : MaterialForm
 		}
 	}
 
-	private void GetDataFromXml()
+		private void GetDataFromXml()
 	{
 		try
 		{
-			FileStream fileStream = new FileStream(Application.StartupPath + "\\ERP.xml", FileMode.Open, FileAccess.Read);
-			XmlSerializer xmlSerializer = new XmlSerializer(typeof(List<SaveConnectionForXml>));
-			List<SaveConnectionForXml> list = new List<SaveConnectionForXml>();
-			list = (List<SaveConnectionForXml>)xmlSerializer.Deserialize(fileStream);
-			SaveConnectionForXml saveConnectionForXml = list[0];
-			LoginDetails.nameServer = saveConnectionForXml._comboServer;
-			LoginDetails.databaseServer = saveConnectionForXml._comboDatabase;
-			LoginDetails.userNameServer = Class_Encryption.DecryptString(saveConnectionForXml._TxtUser, "EF");
-			LoginDetails.passServer = Class_Encryption.DecryptString(saveConnectionForXml._TxtPassword, "EF");
-			LoginDetails.ConnString = "Data Source=" + LoginDetails.nameServer + ";Initial Catalog=" + LoginDetails.databaseServer + ";Persist Security Info=True;User ID=" + LoginDetails.userNameServer + ";Password=" + LoginDetails.passServer;
-			fileStream.Close();
+			string xmlPath = Path.Combine(Application.StartupPath, "ERP.xml");
+			if (File.Exists(xmlPath))
+			{
+				XmlSerializer serializer = new XmlSerializer(typeof(List<SaveConnectionForXml>));
+				List<SaveConnectionForXml> settings;
+				using (FileStream stream = new FileStream(xmlPath, FileMode.Open, FileAccess.Read, FileShare.Read))
+				{
+					settings = (List<SaveConnectionForXml>)serializer.Deserialize(stream);
+				}
+
+				if (settings == null || settings.Count == 0)
+					throw new InvalidDataException("ملف ERP.xml لا يحتوي على إعدادات اتصال.");
+
+				SaveConnectionForXml saved = settings[0];
+				LoginDetails.nameServer = saved._comboServer;
+				LoginDetails.databaseServer = saved._comboDatabase;
+				LoginDetails.userNameServer = Class_Encryption.DecryptString(saved._TxtUser, "EF");
+				LoginDetails.passServer = Class_Encryption.DecryptString(saved._TxtPassword, "EF");
+
+				System.Data.SqlClient.SqlConnectionStringBuilder sqlBuilder =
+					new System.Data.SqlClient.SqlConnectionStringBuilder
+					{
+						DataSource = LoginDetails.nameServer,
+						InitialCatalog = LoginDetails.databaseServer,
+						UserID = LoginDetails.userNameServer,
+						Password = LoginDetails.passServer,
+						PersistSecurityInfo = true,
+						MultipleActiveResultSets = true
+					};
+				LoginDetails.ConnString = sqlBuilder.ConnectionString;
+				return;
+			}
+
+			// ERP.xml is optional when the current executable configuration has
+			// a valid Entity Framework connection string.
+			System.Configuration.ConnectionStringSettings configured =
+				System.Configuration.ConfigurationManager.ConnectionStrings["GTSdbEntities"];
+			if (configured == null || string.IsNullOrWhiteSpace(configured.ConnectionString))
+				throw new InvalidOperationException(
+					"لم يتم العثور على إعداد اتصال GTSdbEntities في ملف إعدادات البرنامج.");
+
+			System.Data.Entity.Core.EntityClient.EntityConnectionStringBuilder entityBuilder =
+				new System.Data.Entity.Core.EntityClient.EntityConnectionStringBuilder(configured.ConnectionString);
+			System.Data.SqlClient.SqlConnectionStringBuilder providerBuilder =
+				new System.Data.SqlClient.SqlConnectionStringBuilder(entityBuilder.ProviderConnectionString);
+
+			LoginDetails.nameServer = providerBuilder.DataSource;
+			LoginDetails.databaseServer = providerBuilder.InitialCatalog;
+			LoginDetails.userNameServer = providerBuilder.UserID;
+			LoginDetails.passServer = providerBuilder.Password;
+			LoginDetails.ConnString = providerBuilder.ConnectionString;
 		}
 		catch (Exception ex)
 		{
-			MessageBox.Show(ex.Message, "مستكشف البيانات", MessageBoxButtons.OK, MessageBoxIcon.Hand, MessageBoxDefaultButton.Button3, MessageBoxOptions.RightAlign);
+			MessageBox.Show(
+				"تعذر قراءة إعدادات الاتصال الحالية. تحقق من ERP.xml أو ملف إعدادات البرنامج.\r\n" + ex.Message,
+				"مستكشف البيانات",
+				MessageBoxButtons.OK,
+				MessageBoxIcon.Error,
+				MessageBoxDefaultButton.Button1,
+				MessageBoxOptions.RightAlign);
 		}
 	}
 
