@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
+using GTSErpSystem.BLL.Security;
 
 namespace GTSErpSystem
 {
@@ -34,6 +35,83 @@ namespace GTSErpSystem
         private readonly List<ModuleEntry> Modules = new List<ModuleEntry>();
         private readonly Dictionary<string, Form> OpenForms =
             new Dictionary<string, Form>(StringComparer.OrdinalIgnoreCase);
+        private readonly CheckPrvlg PermissionChecker = new CheckPrvlg();
+
+        // Explicitly copied from the legacy ribbon handlers in FrmWindow.
+        // A form without a reviewed screen-permission mapping is never exposed here.
+        private static readonly Dictionary<string, int[]> ScreenPermissions =
+            new Dictionary<string, int[]>(StringComparer.OrdinalIgnoreCase)
+            {
+                { "FrmUsers", new[] { 1 } },
+                { "FrmGroups", new[] { 2 } },
+                { "FrmSecurityGroup", new[] { 3 } },
+                { "FrmCompany", new[] { 4 } },
+                { "FrmUnit", new[] { 5 } },
+                { "FrmClass", new[] { 6 } },
+                { "FrmGroupsRes", new[] { 7 } },
+                { "FrmItems", new[] { 8 } },
+                { "FrmPriceOffer", new[] { 10 } },
+                { "FrmPurchaseOrder", new[] { 11 } },
+                { "FrmCashir", new[] { 12 } },
+                { "FrmCashirRestaurant", new[] { 12 } },
+                { "FrmPurchases", new[] { 13 } },
+                { "FrmOrderReturn", new[] { 14 } },
+                { "FrmPurchasesReturn", new[] { 15 } },
+                { "FrmOrdersReturnNoPurchCode", new[] { 16 } },
+                { "FrmPurchasesReturnNoPurchCode", new[] { 17 } },
+                { "FrmOpenQuantity", new[] { 18 } },
+                { "FrmStoresTransfer", new[] { 20, 60 } },
+                { "FrmPlace", new[] { 21 } },
+                { "FrmSalesMan", new[] { 22 } },
+                { "FrmCustomer", new[] { 23 } },
+                { "FrmSuppliers", new[] { 24 } },
+                { "FrmStores", new[] { 25 } },
+                { "FrmBranches", new[] { 26 } },
+                { "FrmCardAccount", new[] { 27 } },
+                { "FrmAccountTree", new[] { 28 } },
+                { "FrmCostCenter", new[] { 29 } },
+                { "FrmOpenAccount", new[] { 30 } },
+                { "FrmReceipts", new[] { 31 } },
+                { "FrmPayment", new[] { 32 } },
+                { "FrmReceiptsBig", new[] { 33 } },
+                { "FrmPaymentBig", new[] { 34 } },
+                { "FrmDailyRestrictionsTest", new[] { 35 } },
+                { "FrmDailyRestrictions", new[] { 36 } },
+                { "FrmPrinterCashier", new[] { 37 } },
+                { "FrmSetting", new[] { 38 } },
+                { "FrmDesignerReport", new[] { 40 } },
+                { "FrmRPMovementsDailyReport", new[] { 41 } },
+                { "FrmRPStoresGardbyProperties", new[] { 42 } },
+                { "FrmRPLeadger", new[] { 43 } },
+                { "FrmRPProfitAndLossAccount", new[] { 44 } },
+                { "FrmRPMizaniyah", new[] { 45 } },
+                { "FrmAllOrders", new[] { 46 } },
+                { "FrmAllOrederReturn", new[] { 47 } },
+                { "FrmAllPurches", new[] { 48 } },
+                { "FrmAllPurchesReturn", new[] { 49 } },
+                { "FrmVatReport", new[] { 50 } },
+                { "FrmSalesEmployee", new[] { 53 } },
+                { "FrmAllOrdersDetails", new[] { 54 } },
+                { "FrmAllOrdersReturnDetails", new[] { 55 } },
+                { "FrmAllPurchesDetails", new[] { 56 } },
+                { "FrmAllPurchesReturnDetails", new[] { 57 } },
+                { "FrmAllOrdersRestaurant", new[] { 58 } },
+                { "FrmCheckOut", new[] { 59 } },
+                { "FrmRPMovementItem", new[] { 60 } },
+                { "FrmAllOrdersProfit", new[] { 61 } },
+                { "FrmRPMizan", new[] { 62 } },
+                { "FrmRPMizanTotal", new[] { 63 } },
+                { "FrmRPMizanGroups", new[] { 64 } },
+                { "FrmRPTranTeacher", new[] { 73 } },
+                { "FrmTobaccoTaxReport", new[] { 75 } },
+                { "FrmEmployee", new[] { 76 } },
+                { "FrmPayrollTemp", new[] { 77 } },
+                { "FrmPayroll", new[] { 78 } },
+                { "FrmAllOrdersProfitByGroup", new[] { 68 } },
+                { "FrmAllOrdersProfitByItems", new[] { 69 } },
+                { "FrmAllOrdersProfitByItems_ItemOnly", new[] { 70 } },
+                { "FrmOrders", new[] { 12 } }
+            };
 
         private FlowLayoutPanel Tiles;
         private TextBox SearchBox;
@@ -47,6 +125,7 @@ namespace GTSErpSystem
             public Type FormType;
             public string Category;
             public string Caption;
+            public Func<Form> CreateForm;
         }
 
         public FrmMainUnified()
@@ -366,11 +445,31 @@ namespace GTSErpSystem
                    "     |     الفرع: " + LoginDetails.BranchID;
         }
 
-        private void DiscoverModules()
+                private void DiscoverModules()
         {
             Modules.Clear();
-            Type[] types;
+            if (LoginDetails.GroupID <= 0)
+                return;
 
+            HashSet<int> allowedScreenIds;
+            try
+            {
+                allowedScreenIds = new HashSet<int>(
+                    PermissionChecker.GetAllowedScreenIds(LoginDetails.GroupID));
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    "تعذر تحميل صلاحيات الشاشات؛ تم إيقاف عرض الشاشات لحماية النظام.\r\n" + ex.Message,
+                    "الصقر لأنظمة المحاسبة",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error,
+                    MessageBoxDefaultButton.Button1,
+                    MessageBoxOptions.RightAlign);
+                return;
+            }
+
+            Type[] types;
             try
             {
                 types = Assembly.GetExecutingAssembly().GetTypes();
@@ -382,10 +481,8 @@ namespace GTSErpSystem
 
             foreach (Type type in types)
             {
-                if (type == null || !type.IsClass || type.IsAbstract)
-                    continue;
-
-                if (!typeof(Form).IsAssignableFrom(type))
+                if (type == null || !type.IsClass || type.IsAbstract ||
+                    !typeof(Form).IsAssignableFrom(type))
                     continue;
 
                 string ns = type.Namespace ?? "";
@@ -407,18 +504,36 @@ namespace GTSErpSystem
                     name.Equals("FrmSqlConnection", StringComparison.OrdinalIgnoreCase))
                     continue;
 
+                int[] screenIds;
+                if (!ScreenPermissions.TryGetValue(name, out screenIds) ||
+                    !screenIds.Any(id => allowedScreenIds.Contains(id)))
+                    continue;
+
+                Func<Form> formFactory = null;
                 ConstructorInfo ctor = type.GetConstructor(
                     BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
                     null, Type.EmptyTypes, null);
 
-                if (ctor == null)
+                // The legacy ribbon opens a new invoice with FrmOrders(null).
+                // Preserve that exact entry path; do not invent invoice data.
+                if (type == typeof(GTSErpSystem.Frms.Orders.FrmOrders))
+                {
+                    formFactory = delegate
+                    {
+                        return new GTSErpSystem.Frms.Orders.FrmOrders(null);
+                    };
+                }
+                else if (ctor == null)
+                {
                     continue;
+                }
 
                 Modules.Add(new ModuleEntry
                 {
                     FormType = type,
                     Category = GetCategory(type),
-                    Caption = GetCaption(type)
+                    Caption = GetCaption(type),
+                    CreateForm = formFactory
                 });
             }
 
@@ -669,8 +784,43 @@ namespace GTSErpSystem
             Tiles.Controls.Add(button);
         }
 
-        private void OpenModule(ModuleEntry module)
+                private void OpenModule(ModuleEntry module)
         {
+            if (module == null || module.FormType == null || LoginDetails.GroupID <= 0)
+                return;
+
+            int[] screenIds;
+            bool allowed = false;
+            try
+            {
+                if (ScreenPermissions.TryGetValue(module.FormType.Name, out screenIds))
+                    allowed = screenIds.Any(id =>
+                        PermissionChecker.CheckUserPage(LoginDetails.GroupID, id));
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    "تعذر التحقق من صلاحية الشاشة؛ لم يتم فتحها.\r\n" + ex.Message,
+                    "الصقر لأنظمة المحاسبة",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error,
+                    MessageBoxDefaultButton.Button1,
+                    MessageBoxOptions.RightAlign);
+                return;
+            }
+
+            if (!allowed)
+            {
+                MessageBox.Show(
+                    "عفوًا، لا توجد لديك صلاحية دخول لهذه الشاشة. راجع مدير النظام.",
+                    "صلاحيات المستخدم",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning,
+                    MessageBoxDefaultButton.Button1,
+                    MessageBoxOptions.RightAlign);
+                return;
+            }
+
             string key = module.FormType.FullName;
 
             Form existing;
@@ -686,7 +836,10 @@ namespace GTSErpSystem
 
             try
             {
-                var form = Activator.CreateInstance(module.FormType, true) as Form;
+                Form form = module.CreateForm != null
+                    ? module.CreateForm()
+                    : Activator.CreateInstance(module.FormType, true) as Form;
+
                 if (form == null)
                     throw new InvalidOperationException("The selected type is not a Windows Form.");
 
@@ -694,7 +847,10 @@ namespace GTSErpSystem
 
                 form.FormClosed += delegate
                 {
-                    OpenForms.Remove(key);
+                    Form current;
+                    if (OpenForms.TryGetValue(key, out current) &&
+                        ReferenceEquals(current, form))
+                        OpenForms.Remove(key);
                 };
 
                 form.Show(this);
