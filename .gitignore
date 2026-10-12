@@ -1,0 +1,12 @@
+.vs/
+**/bin/
+**/obj/
+**/Debug/
+**/Release/
+**/BuildVerify*/
+**/BuildUnified*/
+**/Backups/
+**/Logs/
+App/Signed/
+*.iso
+*.pdb
