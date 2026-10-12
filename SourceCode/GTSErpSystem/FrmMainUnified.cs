@@ -546,10 +546,18 @@ namespace GTSErpSystem
             });
         }
 
-        private static string GetCategory(Type type)
+                private static string GetCategory(Type type)
         {
             string n = type.Name;
             string ns = type.Namespace ?? "";
+
+            // Explicit exceptions for forms whose namespace otherwise misclassifies them.
+            if (n.Equals("FrmStoresTransfer", StringComparison.OrdinalIgnoreCase) ||
+                n.Equals("FrmOpenQuantity", StringComparison.OrdinalIgnoreCase))
+                return "المخزون والأصناف";
+
+            if (n.Equals("FrmPrinterCashier", StringComparison.OrdinalIgnoreCase))
+                return "الإعدادات";
 
             if (ns.IndexOf(".Frms.Reports", StringComparison.OrdinalIgnoreCase) >= 0 ||
                 n.StartsWith("FrmRP", StringComparison.OrdinalIgnoreCase) ||
@@ -578,8 +586,9 @@ namespace GTSErpSystem
                 HasAny(n, "Account", "CostCenter", "DailyRestriction", "OpenAccount"))
                 return "المحاسبة";
 
-            if (HasAny(n, "Prvlg", "Permission", "Security", "UserLogin",
-                    "FrmLock", "PassWord", "Password"))
+            if (ns.IndexOf(".Frms.Security", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                HasAny(n, "Prvlg", "Permission", "Security", "UserLogin",
+                    "FrmLock", "PassWord", "Password", "FrmUsers", "FrmGroups"))
                 return "الأمن والصلاحيات";
 
             if (HasAny(n, "Setting", "Configuration", "Connection", "Backup"))
@@ -614,6 +623,14 @@ namespace GTSErpSystem
                 StringComparer.OrdinalIgnoreCase)
             {
                 { "FrmAccountTree", "شجرة الحسابات" },
+                { "FrmUsers", "المستخدمون" },
+                { "FrmGroups", "مجموعات المستخدمين" },
+                { "FrmSecurityGroup", "صلاحيات المجموعات" },
+                { "FrmStoresTransfer", "تحويل المخزون" },
+                { "FrmOpenQuantity", "كميات افتتاحية" },
+                { "FrmOrders", "فواتير المبيعات" },
+                { "FrmVatReport", "تقرير ضريبة القيمة المضافة" },
+                { "FrmPrinterCashier", "إعدادات طباعة نقطة البيع" },
                 { "FrmCardAccount", "بطاقة الحساب" },
                 { "FrmDailyRestrictions", "القيود اليومية" },
                 { "FrmCostCenter", "مراكز التكلفة" },
