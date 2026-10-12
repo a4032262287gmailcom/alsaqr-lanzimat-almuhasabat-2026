@@ -79,6 +79,7 @@ $methodPattern = [regex]'(?m)^[\t ]*(?:(?:public|private|protected|internal|stat
 $eventPattern = [regex]'(?<control>(?:this\.)?[A-Za-z_]\w*)\s*\.\s*(?<event>Click|ItemClick|DoubleClick|MouseClick|SelectedIndexChanged|SelectedValueChanged|CheckedChanged|TextChanged|FormClosing|FormClosed|Load|KeyDown|KeyUp|CellClick|RowClick|ButtonClick|EditValueChanged|ValueChanged|DateChanged)\s*\+=\s*(?:new\s+[\w.<>]+\s*\(\s*(?:this\.)?(?<h1>[A-Za-z_]\w*)\s*\)|(?:this\.)?(?<h2>[A-Za-z_]\w*)\s*;)' 
 $methodMap = @{}
 $allMethods = New-Object System.Collections.ArrayList
+$globalMethodCount = @{}
 $hooks = New-Object System.Collections.ArrayList
 $contents = @{}
 
@@ -94,6 +95,10 @@ foreach ($file in $files) {
         $line = ([regex]::Matches($txt.Substring(0, $m.Index), "`n")).Count + 1
         $rec = [pscustomobject]@{ File=$file.FullName; Family=$family; Method=$m.Groups['name'].Value; Line=$line; Body=$body }
         [void]$allMethods.Add($rec)
+        if (-not $globalMethodCount.ContainsKey($rec.Method)) {
+            $globalMethodCount[$rec.Method] = 0
+        }
+        $globalMethodCount[$rec.Method]++
         $key = $family + '|' + $rec.Method
         if (-not $methodMap.ContainsKey($key)) { $methodMap[$key] = New-Object System.Collections.ArrayList }
         [void]$methodMap[$key].Add($rec)
@@ -111,7 +116,7 @@ $missing = New-Object System.Collections.ArrayList
 foreach ($h in $hooks) {
     $key = $h.Family + '|' + $h.Handler
     if (-not $methodMap.ContainsKey($key)) {
-        $globalMatch = @($allMethods | Where-Object { $_.Method -eq $h.Handler }).Count
+        $globalMatch = if ($globalMethodCount.ContainsKey($h.Handler)) { $globalMethodCount[$h.Handler] } else { 0 }
         $status = if ($globalMatch -gt 0) { 'Definition found outside same filename family; inspect inheritance/partial-class layout' } else { 'No method definition found by scanner' }
         [void]$missing.Add([pscustomobject]@{ File=$h.File; Family=$h.Family; Line=$h.Line; Control=$h.Control; Event=$h.Event; Handler=$h.Handler; GlobalDefinitions=$globalMatch; Status=$status })
         continue
