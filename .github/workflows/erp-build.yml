@@ -1,8 +1,5 @@
 name: Validate Alsaqr ERP
 on:
-  push:
-    branches:
-      - repair/erp-connection-permissions-20261013
   pull_request:
     branches:
       - main
