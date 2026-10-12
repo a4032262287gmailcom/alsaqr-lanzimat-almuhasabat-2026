@@ -7,7 +7,6 @@ using System.Data.SqlClient;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
-using System.Media;
 using System.Windows.Forms;
 using System.Xml.Serialization;
 using DevExpress.LookAndFeel;
@@ -19,14 +18,6 @@ namespace GTSErpSystem;
 
 public class FrmSqlConnection : XtraForm
 {
-	private SqlConnection Conn;
-
-	private SqlCommand Command;
-
-	private SqlDataReader Reader;
-
-	private string sql = "";
-
 	private string ConnectionString = "";
 
 	private IContainer components = null;
