@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<ArrayOfSaveConnectionForXml xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <SaveConnectionForXml>
+    <_comboServer>.\SQLEXPRESS</_comboServer>
+    <_comboDatabase>GtsDb2026</_comboDatabase>
+    <_TxtUser>gVuKlcj3Dqoyo1niCgglOw==</_TxtUser>
+    <_TxtPassword>UjPyJs5dbZcRXzzAd4crlQ==</_TxtPassword>
+  </SaveConnectionForXml>
+</ArrayOfSaveConnectionForXml>
