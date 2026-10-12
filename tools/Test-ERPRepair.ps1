@@ -29,13 +29,14 @@ $DependencyRoot = [System.IO.Path]::GetFullPath(
 Assert-True (Test-Path $DependencyRoot) "مجلد الاعتماديات المضمن موجود"
 
 $ReferenceErrors = New-Object System.Collections.Generic.List[string]
+$RuntimePrefix = '$(RuntimeDependencyRoot)\'
 $HintNodes = $ProjectXml.SelectNodes("//HintPath")
 foreach ($Node in $HintNodes) {
     $Hint = $Node.InnerText.Trim()
     if ([string]::IsNullOrWhiteSpace($Hint)) { continue }
 
-    if ($Hint.StartsWith("$(RuntimeDependencyRoot)\", [System.StringComparison]::OrdinalIgnoreCase)) {
-        $Relative = $Hint.Substring("$(RuntimeDependencyRoot)\".Length)
+    if ($Hint.StartsWith($RuntimePrefix, [System.StringComparison]::OrdinalIgnoreCase)) {
+        $Relative = $Hint.Substring($RuntimePrefix.Length)
         $Resolved = Join-Path $DependencyRoot $Relative
     } elseif ([System.IO.Path]::IsPathRooted($Hint)) {
         $Resolved = $Hint
