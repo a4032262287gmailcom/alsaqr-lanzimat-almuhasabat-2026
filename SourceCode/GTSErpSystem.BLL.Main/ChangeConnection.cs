@@ -125,33 +125,47 @@ internal class ChangeConnection
     }
 }
 
-	public string GetSqlConnectionFromFile()
+		public string GetSqlConnectionFromFile()
 	{
-		string text = "";
-		string text2 = "";
-		string text3 = "";
-		string text4 = "";
-		try
+		string path = Path.Combine(Application.StartupPath, "ERP.xml");
+		if (!File.Exists(path))
+			throw new FileNotFoundException("لم يتم العثور على ملف إعداد الاتصال ERP.xml.", path);
+
+		XmlSerializer serializer = new XmlSerializer(typeof(List<SaveConnectionForXml>));
+		List<SaveConnectionForXml> settings;
+		using (FileStream stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
 		{
-			XmlSerializer xmlSerializer = new XmlSerializer(typeof(List<SaveConnectionForXml>));
-			List<SaveConnectionForXml> list = new List<SaveConnectionForXml>();
-			if (File.Exists(Application.StartupPath + "\\ERP.xml"))
+			settings = (List<SaveConnectionForXml>)serializer.Deserialize(stream);
+		}
+
+		if (settings == null || settings.Count == 0 || settings[0] == null)
+			throw new InvalidDataException("ملف ERP.xml لا يحتوي على إعدادات اتصال.");
+
+		SaveConnectionForXml saved = settings[0];
+		if (string.IsNullOrWhiteSpace(saved._comboServer) ||
+			string.IsNullOrWhiteSpace(saved._comboDatabase))
+			throw new InvalidDataException("ملف ERP.xml لا يحتوي على اسم خادم وقاعدة بيانات صالحين.");
+
+		string userName = Class_Encryption.DecryptString(saved._TxtUser, "EF");
+		string password = Class_Encryption.DecryptString(saved._TxtPassword, "EF");
+		DataBaseDefualt = saved._comboDatabase;
+
+		System.Data.SqlClient.SqlConnectionStringBuilder builder =
+			new System.Data.SqlClient.SqlConnectionStringBuilder
 			{
-				FileStream fileStream = new FileStream(Application.StartupPath + "\\ERP.xml", FileMode.Open, FileAccess.Read);
-				list = (List<SaveConnectionForXml>)xmlSerializer.Deserialize(fileStream);
-				SaveConnectionForXml saveConnectionForXml = list[0];
-				text = saveConnectionForXml._comboServer;
-				text2 = Class_Encryption.DecryptString(saveConnectionForXml._TxtUser, "EF");
-				text3 = Class_Encryption.DecryptString(saveConnectionForXml._TxtPassword, "EF");
-				text4 = (DataBaseDefualt = saveConnectionForXml._comboDatabase);
-				fileStream.Close();
-			}
-		}
-		catch (Exception ex)
-		{
-			MessageBox.Show(ex.Message, "مستكشف البيانات", MessageBoxButtons.OK, MessageBoxIcon.Hand);
-		}
-		return "data source=" + text + ";initial catalog=" + text4 + ";persist security info=True;user id=" + text2 + ";password=" + text3 + ";";
+				DataSource = saved._comboServer.Trim(),
+				InitialCatalog = saved._comboDatabase.Trim(),
+				UserID = userName,
+				Password = password,
+				PersistSecurityInfo = true,
+				MultipleActiveResultSets = true,
+				ConnectTimeout = 5,
+				Encrypt = false,
+				TrustServerCertificate = true,
+				ApplicationName = "EntityFramework"
+			};
+
+		return builder.ConnectionString;
 	}
 }
 
