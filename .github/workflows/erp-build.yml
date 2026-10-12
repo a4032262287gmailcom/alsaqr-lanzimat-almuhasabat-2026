@@ -21,6 +21,10 @@ jobs:
         with:
           dotnet-version: "8.0.x"
 
+      - name: Audit named event bindings (heuristic)
+        shell: pwsh
+        run: .\tools\Audit-ERPFunctionalBindings.ps1 -ProjectRoot .\SourceCode -ReportRoot .\artifacts\EventAudit
+
       - name: Restore packages
         shell: pwsh
         run: dotnet restore .\AlsaqrERP.sln
@@ -28,3 +32,11 @@ jobs:
       - name: Build Release
         shell: pwsh
         run: dotnet build .\AlsaqrERP.sln --configuration Release --no-restore --no-incremental
+
+      - name: Upload event audit reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: erp-event-audit
+          path: artifacts/EventAudit/**
+          if-no-files-found: warn
