@@ -113,6 +113,31 @@ namespace GTSErpSystem
                 { "FrmOrders", new[] { 12 } }
             };
 
+        // Resolve names that exist in more than one report namespace.
+        // The canonical targets below are the same types opened by FrmWindow.
+        private static readonly string[] CanonicalFormNames =
+        {
+            "GTSErpSystem.Frms.Reports.Orders.FrmAllOrders",
+            "GTSErpSystem.Frms.Reports.Orders.FrmAllOrederReturn",
+            "GTSErpSystem.Frms.Reports.Orders.FrmAllOrdersDetails",
+            "GTSErpSystem.Frms.Reports.Orders.FrmAllOrdersReturnDetails",
+            "GTSErpSystem.Frms.Reports.Profit.FrmAllOrdersProfit",
+            "GTSErpSystem.Frms.Reports.Profit.FrmAllOrdersProfitByItems_ItemOnly",
+            "GTSErpSystem.Frms.Orders.FrmOrders"
+        };
+
+        private static bool IsCanonicalMappedForm(Type type)
+        {
+            if (type == null)
+                return false;
+
+            string canonicalName = CanonicalFormNames.FirstOrDefault(
+                fullName => fullName.EndsWith("." + type.Name, StringComparison.OrdinalIgnoreCase));
+
+            return canonicalName == null ||
+                string.Equals(type.FullName, canonicalName, StringComparison.OrdinalIgnoreCase);
+        }
+
         private FlowLayoutPanel Tiles;
         private TextBox SearchBox;
         private Label PageTitle;
@@ -506,6 +531,7 @@ namespace GTSErpSystem
 
                 int[] screenIds;
                 if (!ScreenPermissions.TryGetValue(name, out screenIds) ||
+                    !IsCanonicalMappedForm(type) ||
                     !screenIds.Any(id => allowedScreenIds.Contains(id)))
                     continue;
 
@@ -808,7 +834,8 @@ namespace GTSErpSystem
             bool allowed = false;
             try
             {
-                if (ScreenPermissions.TryGetValue(module.FormType.Name, out screenIds))
+                if (IsCanonicalMappedForm(module.FormType) &&
+                    ScreenPermissions.TryGetValue(module.FormType.Name, out screenIds))
                     allowed = screenIds.Any(id =>
                         PermissionChecker.CheckUserPage(LoginDetails.GroupID, id));
             }
