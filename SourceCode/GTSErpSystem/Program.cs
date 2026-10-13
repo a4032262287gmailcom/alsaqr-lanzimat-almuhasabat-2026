@@ -23,8 +23,36 @@ internal static class Program
 		BonusSkins.Register();
 		SkinManager.EnableFormSkins();
 		LoginDetails.VergDate = "اصدار:VER [1]26.07.08";
-		// Legacy activation setup is intentionally excluded from the login startup flow.
-		changeConnection.SaveConnectionString("GTSdbEntities", "Data Source=.\\SQLEXPRESS;Initial Catalog=GtsDb2026;Integrated Security=True;MultipleActiveResultSets=True;Encrypt=False;TrustServerCertificate=True;Connect Timeout=5");
+		// GetPass(); // temporarily disabled for activation diagnosis
+		// Respect the connection saved by FrmSqlConnection. If no saved settings
+		// exist, leave the deployed app.config connection unchanged.
+		string savedConnectionPath = System.IO.Path.Combine(Application.StartupPath, "ERP.xml");
+		if (System.IO.File.Exists(savedConnectionPath))
+		{
+			try
+			{
+				string savedSqlConnection = changeConnection.GetSqlConnectionFromFile();
+				System.Data.SqlClient.SqlConnectionStringBuilder savedBuilder =
+					new System.Data.SqlClient.SqlConnectionStringBuilder(savedSqlConnection);
+
+				if (string.IsNullOrWhiteSpace(savedBuilder.DataSource) ||
+					string.IsNullOrWhiteSpace(savedBuilder.InitialCatalog))
+				{
+					throw new InvalidOperationException(
+						"ملف ERP.xml لا يحتوي على اسم خادم وقاعدة بيانات صالحين.");
+				}
+
+				changeConnection.SaveConnectionString("GTSdbEntities", savedSqlConnection);
+			}
+			catch (Exception ex)
+			{
+				MessageBox.Show(
+					"تعذر تحميل إعدادات الاتصال المحفوظة. سيُستخدم اتصال app.config الحالي.\r\n" + ex.Message,
+					"إعدادات الاتصال",
+					MessageBoxButtons.OK,
+					MessageBoxIcon.Warning);
+			}
+		}
 		int num = changeConnection.TestCon();
 		if (num > 0)
 		{
@@ -298,4 +326,5 @@ internal static class AlSaqarTheme
     }
 }
 }
+
 

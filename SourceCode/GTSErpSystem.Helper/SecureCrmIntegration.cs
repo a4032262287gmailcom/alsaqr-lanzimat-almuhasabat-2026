@@ -6,7 +6,6 @@ namespace GTSErpSystem.Helper;
 
 public static class SecureCrmIntegration
 {
-	private static readonly string password = "MyStrongPassword123";
 
 	public static string Crm { get; private set; }
 

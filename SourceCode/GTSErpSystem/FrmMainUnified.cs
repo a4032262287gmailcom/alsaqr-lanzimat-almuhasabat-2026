@@ -35,171 +35,110 @@ namespace GTSErpSystem
         private readonly List<ModuleEntry> Modules = new List<ModuleEntry>();
         private readonly Dictionary<string, Form> OpenForms =
             new Dictionary<string, Form>(StringComparer.OrdinalIgnoreCase);
-        private static readonly Dictionary<string, int[]> PermissionScreens =
+        private readonly CheckPrvlg PermissionChecker = new CheckPrvlg();
+
+        // Explicitly copied from the legacy ribbon handlers in FrmWindow.
+        // A form without a reviewed screen-permission mapping is never exposed here.
+        private static readonly Dictionary<string, int[]> ScreenPermissions =
             new Dictionary<string, int[]>(StringComparer.OrdinalIgnoreCase)
             {
-                { "FrmAccountTree", new[] { 28 } },
-                { "FrmAdd", new[] { 156 } },
-                { "FrmAllContract", new[] { 90 } },
-                { "FrmAllContractActiveDisActive", new[] { 93, 95 } },
-                { "FrmAllContractByCostomer", new[] { 92 } },
-                { "FrmAllGuarantee", new[] { 91 } },
-                { "FrmAllOrders", new[] { 46 } },
-                { "FrmAllOrdersBounce", new[] { 110 } },
-                { "FrmAllOrdersCashierSafryMahly", new[] { 100 } },
-                { "FrmAllOrdersCheckOut", new[] { 46 } },
-                { "FrmAllOrdersDetails", new[] { 54 } },
-                { "FrmAllOrdersDetailsByGroup", new[] { 96, 112 } },
-                { "FrmAllOrdersDetailsByProperties", new[] { 115 } },
-                { "FrmAllOrdersProfit", new[] { 61 } },
-                { "FrmAllOrdersProfitByGroup", new[] { 68 } },
-                { "FrmAllOrdersProfitByGroupBy", new[] { 133 } },
-                { "FrmAllOrdersProfitByItems", new[] { 69 } },
-                { "FrmAllOrdersProfitByItems_ItemOnly", new[] { 70 } },
-                { "FrmAllOrdersProfitCashierSafryMahly", new[] { 101 } },
-                { "FrmAllOrdersRestaurant", new[] { 58 } },
-                { "FrmAllOrdersReturnDetails", new[] { 55 } },
-                { "FrmAllOrederReturn", new[] { 47 } },
-                { "FrmAllPrinters", new[] { 104 } },
-                { "FrmAllPurches", new[] { 48 } },
-                { "FrmAllPurchesDetails", new[] { 56 } },
-                { "FrmAllPurchesReturn", new[] { 49 } },
-                { "FrmAllPurchesReturnDetails", new[] { 57 } },
-                { "FrmAllowances", new[] { 120 } },
+                { "FrmUsers", new[] { 1 } },
+                { "FrmGroups", new[] { 2 } },
+                { "FrmSecurityGroup", new[] { 3 } },
+                { "FrmCompany", new[] { 4 } },
+                { "FrmUnit", new[] { 5 } },
+                { "FrmClass", new[] { 6 } },
+                { "FrmGroupsRes", new[] { 7 } },
+                { "FrmItems", new[] { 8 } },
+                { "FrmPriceOffer", new[] { 10 } },
+                { "FrmPurchaseOrder", new[] { 11 } },
+                { "FrmCashir", new[] { 12 } },
+                { "FrmCashirRestaurant", new[] { 12 } },
+                { "FrmPurchases", new[] { 13 } },
+                { "FrmOrderReturn", new[] { 14 } },
+                { "FrmPurchasesReturn", new[] { 15 } },
+                { "FrmOrdersReturnNoPurchCode", new[] { 16 } },
+                { "FrmPurchasesReturnNoPurchCode", new[] { 17 } },
+                { "FrmOpenQuantity", new[] { 18 } },
+                { "FrmStoresTransfer", new[] { 20, 60 } },
+                { "FrmPlace", new[] { 21 } },
+                { "FrmSalesMan", new[] { 22 } },
+                { "FrmCustomer", new[] { 23 } },
+                { "FrmSuppliers", new[] { 24 } },
+                { "FrmStores", new[] { 25 } },
                 { "FrmBranches", new[] { 26 } },
                 { "FrmCardAccount", new[] { 27 } },
-                { "FrmCashir", new[] { 12, 157 } },
-                { "FrmCashirPharm", new[] { 12 } },
-                { "FrmCashirRestaurant", new[] { 12, 157 } },
-                { "FrmCashirWashing", new[] { 157 } },
-                { "FrmCashirWithOutGroup", new[] { 12 } },
-                { "FrmCheckActivationElctroncInv", new[] { 160 } },
-                { "FrmCheckCollection", new[] { 124 } },
-                { "FrmCheckCollectionIssued", new[] { 126 } },
-                { "FrmCheckIssued", new[] { 125 } },
-                { "FrmCheckOut", new[] { 59 } },
-                { "FrmClass", new[] { 6, 8 } },
-                { "FrmCloseDayByUser", new[] { 117 } },
-                { "FrmCompany", new[] { 4, 8 } },
-                { "FrmContract", new[] { 89, 98 } },
-                { "FrmCostCenter", new[] { 29 } },
-                { "FrmCostCenterByFather", new[] { 134 } },
-                { "FrmCostCenterTree", new[] { 28 } },
-                { "FrmCountry", new[] { 8, 80 } },
-                { "FrmCustomer", new[] { 23 } },
-                { "FrmDailyRestrictions", new[] { 36 } },
-                { "FrmDailyRestrictionsTest", new[] { 35 } },
-                { "FrmDalala", new[] { 107 } },
+                { "FrmAccountTree", new[] { 28 } },
                 { "FrmDefualtAccount", new[] { 39 } },
                 { "FrmDefualtCustomer", new[] { 39 } },
-                { "FrmDelivery", new[] { 86 } },
-                { "FrmDesignerReport", new[] { 40 } },
-                { "FrmDoctor", new[] { 105 } },
-                { "FrmDrivers", new[] { 97 } },
-                { "FrmEJAR", new[] { 147 } },
-                { "FrmEmployee", new[] { 76 } },
-                { "FrmEntrusted", new[] { 121 } },
-                { "FrmEntrustedEmployee", new[] { 122 } },
-                { "FrmGenetareCSID", new[] { 160 } },
-                { "FrmGroups", new[] { 2 } },
-                { "FrmGroupsRes", new[] { 7, 8 } },
-                { "FrmGuarantee", new[] { 8 } },
-                { "FrmInventorySettlementMinus", new[] { 83 } },
-                { "FrmItems", new[] { 8 } },
-                { "FrmManufacturing", new[] { 119 } },
-                { "FrmManufacturingOrder", new[] { 118 } },
-                { "FrmMovementsDailyReport", new[] { 41 } },
-                { "FrmMovementsDailyReportAllBran", new[] { 87 } },
-                { "FrmNetOrders", new[] { 153 } },
-                { "FrmNetProfitSalesMan", new[] { 131 } },
-                { "FrmNetPurchOrders", new[] { 154 } },
-                { "FrmNetPurches", new[] { 152 } },
+                { "FrmCostCenter", new[] { 29 } },
                 { "FrmOpenAccount", new[] { 30 } },
-                { "FrmOpenQuantity", new[] { 18 } },
-                { "FrmOrderDetailsByDate", new[] { 143 } },
-                { "FrmOrderReturn", new[] { 14 } },
-                { "FrmOrderReturnRental", new[] { 111 } },
-                { "FrmOrders", new[] { 12 } },
-                { "FrmOrdersDraft", new[] { 10 } },
-                { "FrmOrdersNetPurchOnly", new[] { 155 } },
-                { "FrmOrdersReturn", new[] { 151 } },
-                { "FrmOrdersReturnNoPurchCode", new[] { 16 } },
-                { "FrmOrdersWedding", new[] { 12 } },
-                { "FrmPassword", new[] { 1 } },
-                { "FrmPayment", new[] { 32 } },
-                { "FrmPaymentBig", new[] { 34 } },
-                { "FrmPaymentItem", new[] { 103 } },
-                { "FrmPayroll", new[] { 78 } },
-                { "FrmPayrollTemp", new[] { 77 } },
-                { "FrmPlace", new[] { 21 } },
-                { "FrmPriceOffer", new[] { 10 } },
-                { "FrmPrinterCashier", new[] { 37 } },
-                { "FrmProjects", new[] { 139 } },
-                { "FrmPurchaseOrder", new[] { 11 } },
-                { "FrmPurchases", new[] { 13 } },
-                { "FrmPurchasesReturn", new[] { 15 } },
-                { "FrmPurchasesReturnNoPurchCode", new[] { 17 } },
-                { "FrmPurches", new[] { 149 } },
-                { "FrmPurchesReturn", new[] { 150 } },
-                { "FrmRPCostCenter", new[] { 134 } },
-                { "FrmRPDeportation", new[] { 43 } },
-                { "FrmRPItemLimit", new[] { 74 } },
-                { "FrmRPLeadger", new[] { 43, 66, 67 } },
-                { "FrmRPLeadgerCar", new[] { 43 } },
-                { "FrmRPLeadgerSupp", new[] { 113 } },
-                { "FrmRPMizan", new[] { 62 } },
-                { "FrmRPMizanCustSupp", new[] { 51 } },
-                { "FrmRPMizanGroups", new[] { 64 } },
-                { "FrmRPMizanTotal", new[] { 63 } },
-                { "FrmRPMizaniyah", new[] { 45 } },
-                { "FrmRPMizaniyahAllBran", new[] { 89 } },
-                { "FrmRPMovementAllItemActive", new[] { 102 } },
-                { "FrmRPMovementItem", new[] { 60 } },
-                { "FrmRPMovementItemActive", new[] { 102 } },
-                { "FrmRPMovementsDailyReport", new[] { 41 } },
-                { "FrmRPOrderDaily", new[] { 116 } },
-                { "FrmRPProfitAndLossAccount", new[] { 44 } },
-                { "FrmRPProfitAndLossAccountAllBran", new[] { 88 } },
-                { "FrmRPProject", new[] { 140 } },
-                { "FrmRPStoresGard", new[] { 42 } },
-                { "FrmRPStoresGardbyProperties", new[] { 42 } },
-                { "FrmRPTasferByGroup", new[] { 141 } },
-                { "FrmRPTranTeacher", new[] { 73 } },
-                { "FrmReceiptCheck", new[] { 123 } },
                 { "FrmReceipts", new[] { 31 } },
+                { "FrmPayment", new[] { 32 } },
                 { "FrmReceiptsBig", new[] { 33 } },
-                { "FrmReceiptsScaffolds", new[] { 31 } },
-                { "FrmRecipt", new[] { 112 } },
-                { "FrmRecipt3", new[] { 112 } },
-                { "FrmRecpItem", new[] { 138 } },
-                { "FrmRent", new[] { 111 } },
-                { "FrmRentReports2", new[] { 158 } },
-                { "FrmRentalInvoice", new[] { 111 } },
-                { "FrmReplace", new[] { 17 } },
-                { "FrmReportAll", new[] { 82 } },
-                { "FrmReportOrderDalala_Dalala", new[] { 108 } },
-                { "FrmReportOrderDalala_Sending", new[] { 109 } },
-                { "FrmRoom", new[] { 84 } },
-                { "FrmRpSalesPurchesForSupp", new[] { 142 } },
-                { "FrmSalesEmployee", new[] { 53 } },
-                { "FrmSalesMan", new[] { 22 } },
-                { "FrmSecurityGroup", new[] { 3 } },
-                { "FrmSending", new[] { 106 } },
+                { "FrmPaymentBig", new[] { 34 } },
+                { "FrmDailyRestrictionsTest", new[] { 35 } },
+                { "FrmDailyRestrictions", new[] { 36 } },
+                { "FrmPrinterCashier", new[] { 37 } },
                 { "FrmSetting", new[] { 38 } },
-                { "FrmStoreGardCat", new[] { 42 } },
-                { "FrmStores", new[] { 25 } },
-                { "FrmStoresTransfer", new[] { 20, 60 } },
-                { "FrmSuppliers", new[] { 24 } },
-                { "FrmTable", new[] { 85 } },
+                { "FrmDesignerReport", new[] { 40 } },
+                { "FrmRPMovementsDailyReport", new[] { 41 } },
+                { "FrmRPStoresGardbyProperties", new[] { 42 } },
+                { "FrmRPLeadger", new[] { 43 } },
+                { "FrmRPProfitAndLossAccount", new[] { 44 } },
+                { "FrmRPMizaniyah", new[] { 45 } },
+                { "FrmAllOrders", new[] { 46 } },
+                { "FrmAllOrederReturn", new[] { 47 } },
+                { "FrmAllPurches", new[] { 48 } },
+                { "FrmAllPurchesReturn", new[] { 49 } },
+                { "FrmVatReport", new[] { 50 } },
+                { "FrmSalesEmployee", new[] { 53 } },
+                { "FrmAllOrdersDetails", new[] { 54 } },
+                { "FrmAllOrdersReturnDetails", new[] { 55 } },
+                { "FrmAllPurchesDetails", new[] { 56 } },
+                { "FrmAllPurchesReturnDetails", new[] { 57 } },
+                { "FrmAllOrdersRestaurant", new[] { 58 } },
+                { "FrmCheckOut", new[] { 59 } },
+                { "FrmRPMovementItem", new[] { 60 } },
+                { "FrmAllOrdersProfit", new[] { 61 } },
+                { "FrmRPMizan", new[] { 62 } },
+                { "FrmRPMizanTotal", new[] { 63 } },
+                { "FrmRPMizanGroups", new[] { 64 } },
+                { "FrmRPTranTeacher", new[] { 73 } },
                 { "FrmTobaccoTaxReport", new[] { 75 } },
-                { "FrmTransferBranchMaster", new[] { 144 } },
-                { "FrmTransferFromBranch", new[] { 95 } },
-                { "FrmTransferMasterToBranch", new[] { 145 } },
-                { "FrmTransferToBranch", new[] { 94 } },
-                { "FrmUnit", new[] { 5, 8 } },
-                { "FrmUsers", new[] { 1 } },
-                { "FrmVatReport", new[] { 50 } }
+                { "FrmEmployee", new[] { 76 } },
+                { "FrmPayrollTemp", new[] { 77 } },
+                { "FrmPayroll", new[] { 78 } },
+                { "FrmAllOrdersProfitByGroup", new[] { 68 } },
+                { "FrmAllOrdersProfitByItems", new[] { 69 } },
+                { "FrmAllOrdersProfitByItems_ItemOnly", new[] { 70 } },
+                { "FrmOrders", new[] { 12 } }
             };
+
+        // Resolve names that exist in more than one report namespace.
+        // The canonical targets below are the same types opened by FrmWindow.
+        private static readonly string[] CanonicalFormNames =
+        {
+            "GTSErpSystem.Frms.Reports.Orders.FrmAllOrders",
+            "GTSErpSystem.Frms.Reports.Orders.FrmAllOrederReturn",
+            "GTSErpSystem.Frms.Reports.Orders.FrmAllOrdersDetails",
+            "GTSErpSystem.Frms.Reports.Orders.FrmAllOrdersReturnDetails",
+            "GTSErpSystem.Frms.Reports.Profit.FrmAllOrdersProfit",
+            "GTSErpSystem.Frms.Reports.Profit.FrmAllOrdersProfitByItems_ItemOnly",
+            "GTSErpSystem.Frms.Orders.FrmOrders"
+        };
+
+        private static bool IsCanonicalMappedForm(Type type)
+        {
+            if (type == null)
+                return false;
+
+            string canonicalName = CanonicalFormNames.FirstOrDefault(
+                fullName => fullName.EndsWith("." + type.Name, StringComparison.OrdinalIgnoreCase));
+
+            return canonicalName == null ||
+                string.Equals(type.FullName, canonicalName, StringComparison.OrdinalIgnoreCase);
+        }
 
         private FlowLayoutPanel Tiles;
         private TextBox SearchBox;
@@ -213,7 +152,7 @@ namespace GTSErpSystem
             public Type FormType;
             public string Category;
             public string Caption;
-            public int[] ScreenIDs;
+            public Func<Form> CreateForm;
         }
 
         public FrmMainUnified()
@@ -533,11 +472,31 @@ namespace GTSErpSystem
                    "     |     الفرع: " + LoginDetails.BranchID;
         }
 
-        private void DiscoverModules()
+                private void DiscoverModules()
         {
             Modules.Clear();
-            Type[] types;
+            if (LoginDetails.GroupID <= 0)
+                return;
 
+            HashSet<int> allowedScreenIds;
+            try
+            {
+                allowedScreenIds = new HashSet<int>(
+                    PermissionChecker.GetAllowedScreenIds(LoginDetails.GroupID));
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    "تعذر تحميل صلاحيات الشاشات؛ تم إيقاف عرض الشاشات لحماية النظام.\r\n" + ex.Message,
+                    "الصقر لأنظمة المحاسبة",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error,
+                    MessageBoxDefaultButton.Button1,
+                    MessageBoxOptions.RightAlign);
+                return;
+            }
+
+            Type[] types;
             try
             {
                 types = Assembly.GetExecutingAssembly().GetTypes();
@@ -549,10 +508,8 @@ namespace GTSErpSystem
 
             foreach (Type type in types)
             {
-                if (type == null || !type.IsClass || type.IsAbstract)
-                    continue;
-
-                if (!typeof(Form).IsAssignableFrom(type))
+                if (type == null || !type.IsClass || type.IsAbstract ||
+                    !typeof(Form).IsAssignableFrom(type))
                     continue;
 
                 string ns = type.Namespace ?? "";
@@ -574,20 +531,37 @@ namespace GTSErpSystem
                     name.Equals("FrmSqlConnection", StringComparison.OrdinalIgnoreCase))
                     continue;
 
+                int[] screenIds;
+                if (!ScreenPermissions.TryGetValue(name, out screenIds) ||
+                    !IsCanonicalMappedForm(type) ||
+                    !screenIds.Any(id => allowedScreenIds.Contains(id)))
+                    continue;
+
+                Func<Form> formFactory = null;
                 ConstructorInfo ctor = type.GetConstructor(
                     BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
                     null, Type.EmptyTypes, null);
 
-                int[] screenIds;
-                if (ctor == null || !PermissionScreens.TryGetValue(name, out screenIds))
+                // The legacy ribbon opens a new invoice with FrmOrders(null).
+                // Preserve that exact entry path; do not invent invoice data.
+                if (type == typeof(GTSErpSystem.Frms.Orders.FrmOrders))
+                {
+                    formFactory = delegate
+                    {
+                        return new GTSErpSystem.Frms.Orders.FrmOrders(null);
+                    };
+                }
+                else if (ctor == null)
+                {
                     continue;
+                }
 
                 Modules.Add(new ModuleEntry
                 {
                     FormType = type,
                     Category = GetCategory(type),
                     Caption = GetCaption(type),
-                    ScreenIDs = screenIds
+                    CreateForm = formFactory
                 });
             }
 
@@ -600,10 +574,18 @@ namespace GTSErpSystem
             });
         }
 
-        private static string GetCategory(Type type)
+                private static string GetCategory(Type type)
         {
             string n = type.Name;
             string ns = type.Namespace ?? "";
+
+            // Explicit exceptions for forms whose namespace otherwise misclassifies them.
+            if (n.Equals("FrmStoresTransfer", StringComparison.OrdinalIgnoreCase) ||
+                n.Equals("FrmOpenQuantity", StringComparison.OrdinalIgnoreCase))
+                return "المخزون والأصناف";
+
+            if (n.Equals("FrmPrinterCashier", StringComparison.OrdinalIgnoreCase))
+                return "الإعدادات";
 
             if (ns.IndexOf(".Frms.Reports", StringComparison.OrdinalIgnoreCase) >= 0 ||
                 n.StartsWith("FrmRP", StringComparison.OrdinalIgnoreCase) ||
@@ -632,8 +614,9 @@ namespace GTSErpSystem
                 HasAny(n, "Account", "CostCenter", "DailyRestriction", "OpenAccount"))
                 return "المحاسبة";
 
-            if (HasAny(n, "Prvlg", "Permission", "Security", "UserLogin",
-                    "FrmLock", "PassWord", "Password"))
+            if (ns.IndexOf(".Frms.Security", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                HasAny(n, "Prvlg", "Permission", "Security", "UserLogin",
+                    "FrmLock", "PassWord", "Password", "FrmUsers", "FrmGroups"))
                 return "الأمن والصلاحيات";
 
             if (HasAny(n, "Setting", "Configuration", "Connection", "Backup"))
@@ -664,22 +647,18 @@ namespace GTSErpSystem
 
         private static string GetCaption(Type type)
         {
-            if (type.Name.Equals("FrmDefualtAccount", StringComparison.OrdinalIgnoreCase))
-            {
-                return type.Namespace != null &&
-                       type.Namespace.Equals("GTSErpSystem.Frms.FrmsMain",
-                           StringComparison.OrdinalIgnoreCase)
-                    ? "تهيئة الحسابات الافتراضية للفرع"
-                    : "ربط الحسابات الافتراضية للأصناف";
-            }
-
-            if (type.Name.Equals("FrmDefualtCustomer", StringComparison.OrdinalIgnoreCase))
-                return "ربط الحسابات الافتراضية للعملاء";
-
             var names = new Dictionary<string, string>(
                 StringComparer.OrdinalIgnoreCase)
             {
                 { "FrmAccountTree", "شجرة الحسابات" },
+                { "FrmDefualtAccount", "الحسابات الافتراضية" },
+                { "FrmDefualtCustomer", "حسابات العملاء الافتراضية" },
+                { "FrmUsers", "المستخدمون" },
+                { "FrmGroups", "مجموعات المستخدمين" },
+                { "FrmSecurityGroup", "صلاحيات المجموعات" },
+                { "FrmOpenQuantity", "كميات افتتاحية" },
+                { "FrmVatReport", "تقرير ضريبة القيمة المضافة" },
+                { "FrmPrinterCashier", "إعدادات طباعة نقطة البيع" },
                 { "FrmCardAccount", "بطاقة الحساب" },
                 { "FrmDailyRestrictions", "القيود اليومية" },
                 { "FrmCostCenter", "مراكز التكلفة" },
@@ -850,39 +829,63 @@ namespace GTSErpSystem
             Tiles.Controls.Add(button);
         }
 
-        private void OpenModule(ModuleEntry module)
+                private void OpenModule(ModuleEntry module)
         {
+            if (module == null || module.FormType == null || LoginDetails.GroupID <= 0)
+                return;
+
+            int[] screenIds;
+            bool allowed = false;
+            try
+            {
+                if (IsCanonicalMappedForm(module.FormType) &&
+                    ScreenPermissions.TryGetValue(module.FormType.Name, out screenIds))
+                    allowed = screenIds.Any(id =>
+                        PermissionChecker.CheckUserPage(LoginDetails.GroupID, id));
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    "تعذر التحقق من صلاحية الشاشة؛ لم يتم فتحها.\r\n" + ex.Message,
+                    "الصقر لأنظمة المحاسبة",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error,
+                    MessageBoxDefaultButton.Button1,
+                    MessageBoxOptions.RightAlign);
+                return;
+            }
+
+            if (!allowed)
+            {
+                MessageBox.Show(
+                    "عفوًا، لا توجد لديك صلاحية دخول لهذه الشاشة. راجع مدير النظام.",
+                    "صلاحيات المستخدم",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning,
+                    MessageBoxDefaultButton.Button1,
+                    MessageBoxOptions.RightAlign);
+                return;
+            }
+
             string key = module.FormType.FullName;
+
+            Form existing;
+            if (OpenForms.TryGetValue(key, out existing) &&
+                existing != null && !existing.IsDisposed)
+            {
+                if (existing.WindowState == FormWindowState.Minimized)
+                    existing.WindowState = FormWindowState.Normal;
+
+                existing.Activate();
+                return;
+            }
 
             try
             {
-                CheckPrvlg permissions = new CheckPrvlg();
-                bool hasPermission = module.ScreenIDs.Any(screenId =>
-                    permissions.CheckUserPage(LoginDetails.GroupID, screenId));
-                if (!hasPermission)
-                {
-                    MessageBox.Show(
-                        "عفواً، لا تملك صلاحية فتح هذه الشاشة. راجع مدير النظام.",
-                        "الصقر لأنظمة المحاسبة",
-                        MessageBoxButtons.OK,
-                        MessageBoxIcon.Warning,
-                        MessageBoxDefaultButton.Button1,
-                        MessageBoxOptions.RightAlign);
-                    return;
-                }
+                Form form = module.CreateForm != null
+                    ? module.CreateForm()
+                    : Activator.CreateInstance(module.FormType, true) as Form;
 
-                Form existing;
-                if (OpenForms.TryGetValue(key, out existing) &&
-                    existing != null && !existing.IsDisposed)
-                {
-                    if (existing.WindowState == FormWindowState.Minimized)
-                        existing.WindowState = FormWindowState.Normal;
-
-                    existing.Activate();
-                    return;
-                }
-
-                var form = Activator.CreateInstance(module.FormType, true) as Form;
                 if (form == null)
                     throw new InvalidOperationException("The selected type is not a Windows Form.");
 
@@ -890,7 +893,10 @@ namespace GTSErpSystem
 
                 form.FormClosed += delegate
                 {
-                    OpenForms.Remove(key);
+                    Form current;
+                    if (OpenForms.TryGetValue(key, out current) &&
+                        ReferenceEquals(current, form))
+                        OpenForms.Remove(key);
                 };
 
                 form.Show(this);
