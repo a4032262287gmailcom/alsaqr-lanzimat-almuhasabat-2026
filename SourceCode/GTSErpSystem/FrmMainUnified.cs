@@ -42,18 +42,108 @@ namespace GTSErpSystem
         private static readonly Dictionary<string, int[]> ScreenPermissions =
             new Dictionary<string, int[]>(StringComparer.OrdinalIgnoreCase)
             {
+                { "FrmAdd", new[] { 156 } },
+                { "FrmAllContract", new[] { 90 } },
+                { "FrmAllContractActiveDisActive", new[] { 93, 95 } },
+                { "FrmAllContractByCostomer", new[] { 92 } },
+                { "FrmAllGuarantee", new[] { 91 } },
+                { "FrmAllOrdersBounce", new[] { 110 } },
+                { "FrmAllOrdersCashierSafryMahly", new[] { 100 } },
+                { "FrmAllOrdersCheckOut", new[] { 46 } },
+                { "FrmAllOrdersDetailsByGroup", new[] { 96, 112 } },
+                { "FrmAllOrdersDetailsByProperties", new[] { 115 } },
+                { "FrmAllOrdersProfitByGroupBy", new[] { 133 } },
+                { "FrmAllOrdersProfitCashierSafryMahly", new[] { 101 } },
+                { "FrmAllPrinters", new[] { 104 } },
+                { "FrmAllowances", new[] { 120 } },
+                { "FrmCashirPharm", new[] { 12 } },
+                { "FrmCashirWashing", new[] { 157 } },
+                { "FrmCashirWithOutGroup", new[] { 12 } },
+                { "FrmCheckActivationElctroncInv", new[] { 160 } },
+                { "FrmCheckCollection", new[] { 124 } },
+                { "FrmCheckCollectionIssued", new[] { 126 } },
+                { "FrmCheckIssued", new[] { 125 } },
+                { "FrmCloseDayByUser", new[] { 117 } },
+                { "FrmContract", new[] { 89, 98 } },
+                { "FrmCostCenterByFather", new[] { 134 } },
+                { "FrmCostCenterTree", new[] { 28 } },
+                { "FrmCountry", new[] { 8, 80 } },
+                { "FrmDalala", new[] { 107 } },
+                { "FrmDelivery", new[] { 86 } },
+                { "FrmDoctor", new[] { 105 } },
+                { "FrmDrivers", new[] { 97 } },
+                { "FrmEJAR", new[] { 147 } },
+                { "FrmEntrusted", new[] { 121 } },
+                { "FrmEntrustedEmployee", new[] { 122 } },
+                { "FrmGenetareCSID", new[] { 160 } },
+                { "FrmGuarantee", new[] { 8 } },
+                { "FrmInventorySettlementMinus", new[] { 83 } },
+                { "FrmManufacturing", new[] { 119 } },
+                { "FrmManufacturingOrder", new[] { 118 } },
+                { "FrmMovementsDailyReport", new[] { 41 } },
+                { "FrmMovementsDailyReportAllBran", new[] { 87 } },
+                { "FrmNetOrders", new[] { 153 } },
+                { "FrmNetProfitSalesMan", new[] { 131 } },
+                { "FrmNetPurchOrders", new[] { 154 } },
+                { "FrmNetPurches", new[] { 152 } },
+                { "FrmOrderDetailsByDate", new[] { 143 } },
+                { "FrmOrderReturnRental", new[] { 111 } },
+                { "FrmOrdersDraft", new[] { 10 } },
+                { "FrmOrdersNetPurchOnly", new[] { 155 } },
+                { "FrmOrdersReturn", new[] { 151 } },
+                { "FrmOrdersWedding", new[] { 12 } },
+                { "FrmPassword", new[] { 1 } },
+                { "FrmPaymentItem", new[] { 103 } },
+                { "FrmProjects", new[] { 139 } },
+                { "FrmPurches", new[] { 149 } },
+                { "FrmPurchesReturn", new[] { 150 } },
+                { "FrmRPCostCenter", new[] { 134 } },
+                { "FrmRPDeportation", new[] { 43 } },
+                { "FrmRPItemLimit", new[] { 74 } },
+                { "FrmRPLeadgerCar", new[] { 43 } },
+                { "FrmRPLeadgerSupp", new[] { 113 } },
+                { "FrmRPMizanCustSupp", new[] { 51 } },
+                { "FrmRPMizaniyahAllBran", new[] { 89 } },
+                { "FrmRPMovementAllItemActive", new[] { 102 } },
+                { "FrmRPMovementItemActive", new[] { 102 } },
+                { "FrmRPOrderDaily", new[] { 116 } },
+                { "FrmRPProfitAndLossAccountAllBran", new[] { 88 } },
+                { "FrmRPProject", new[] { 140 } },
+                { "FrmRPStoresGard", new[] { 42 } },
+                { "FrmRPTasferByGroup", new[] { 141 } },
+                { "FrmReceiptCheck", new[] { 123 } },
+                { "FrmReceiptsScaffolds", new[] { 31 } },
+                { "FrmRecipt", new[] { 112 } },
+                { "FrmRecipt3", new[] { 112 } },
+                { "FrmRecpItem", new[] { 138 } },
+                { "FrmRent", new[] { 111 } },
+                { "FrmRentReports2", new[] { 158 } },
+                { "FrmRentalInvoice", new[] { 111 } },
+                { "FrmReplace", new[] { 17 } },
+                { "FrmReportAll", new[] { 82 } },
+                { "FrmReportOrderDalala_Dalala", new[] { 108 } },
+                { "FrmReportOrderDalala_Sending", new[] { 109 } },
+                { "FrmRoom", new[] { 84 } },
+                { "FrmRpSalesPurchesForSupp", new[] { 142 } },
+                { "FrmSending", new[] { 106 } },
+                { "FrmStoreGardCat", new[] { 42 } },
+                { "FrmTable", new[] { 85 } },
+                { "FrmTransferBranchMaster", new[] { 144 } },
+                { "FrmTransferFromBranch", new[] { 95 } },
+                { "FrmTransferMasterToBranch", new[] { 145 } },
+                { "FrmTransferToBranch", new[] { 94 } },
                 { "FrmUsers", new[] { 1 } },
                 { "FrmGroups", new[] { 2 } },
                 { "FrmSecurityGroup", new[] { 3 } },
-                { "FrmCompany", new[] { 4 } },
-                { "FrmUnit", new[] { 5 } },
-                { "FrmClass", new[] { 6 } },
-                { "FrmGroupsRes", new[] { 7 } },
+                { "FrmCompany", new[] { 4, 8 } },
+                { "FrmUnit", new[] { 5, 8 } },
+                { "FrmClass", new[] { 6, 8 } },
+                { "FrmGroupsRes", new[] { 7, 8 } },
                 { "FrmItems", new[] { 8 } },
                 { "FrmPriceOffer", new[] { 10 } },
                 { "FrmPurchaseOrder", new[] { 11 } },
-                { "FrmCashir", new[] { 12 } },
-                { "FrmCashirRestaurant", new[] { 12 } },
+                { "FrmCashir", new[] { 12, 157 } },
+                { "FrmCashirRestaurant", new[] { 12, 157 } },
                 { "FrmPurchases", new[] { 13 } },
                 { "FrmOrderReturn", new[] { 14 } },
                 { "FrmPurchasesReturn", new[] { 15 } },
@@ -84,7 +174,7 @@ namespace GTSErpSystem
                 { "FrmDesignerReport", new[] { 40 } },
                 { "FrmRPMovementsDailyReport", new[] { 41 } },
                 { "FrmRPStoresGardbyProperties", new[] { 42 } },
-                { "FrmRPLeadger", new[] { 43 } },
+                { "FrmRPLeadger", new[] { 43, 66, 67 } },
                 { "FrmRPProfitAndLossAccount", new[] { 44 } },
                 { "FrmRPMizaniyah", new[] { 45 } },
                 { "FrmAllOrders", new[] { 46 } },
@@ -458,7 +548,7 @@ namespace GTSErpSystem
             };
             status.Controls.Add(new Label
             {
-                Text = "الصقر لأنظمة المحاسبة  |  سطح مكتب Windows  |  " +
+                Text = "الصقر لأنظمة المحاسبة  |  التنقل العلوي  |  " +
                        DateTime.Now.ToString("yyyy/MM/dd"),
                 Dock = DockStyle.Fill,
                 TextAlign = ContentAlignment.MiddleRight,
@@ -669,7 +759,8 @@ namespace GTSErpSystem
                 { "FrmSecurityGroup", "صلاحيات المجموعات" },
                 { "FrmOpenQuantity", "كميات افتتاحية" },
                 { "FrmVatReport", "تقرير ضريبة القيمة المضافة" },
-                { "FrmPrinterCashier", "إعدادات طباعة نقطة البيع" },
+                { "FrmPrinterCashier", "إعدادات طباعة فواتير نقطة البيع" },
+                { "FrmSetting", "إعدادات النظام العامة" },
                 { "FrmCardAccount", "بطاقة الحساب" },
                 { "FrmDailyRestrictions", "القيود اليومية" },
                 { "FrmCostCenter", "مراكز التكلفة" },
@@ -697,7 +788,45 @@ namespace GTSErpSystem
                 { "FrmContract", "العقود" },
                 { "FrmRent", "الإيجارات" },
                 { "FrmPriceOffer", "عروض الأسعار" },
-                { "FrmSearch", "البحث" }
+                { "FrmSearch", "البحث" },
+                { "FrmCompany", "الشركات" },
+                { "FrmUnit", "وحدات القياس" },
+                { "FrmSuppliers", "الموردون" },
+                { "FrmSalesMan", "مندوبو المبيعات" },
+                { "FrmPurchaseOrder", "أوامر الشراء" },
+                { "FrmReceiptsBig", "سندات القبض المتعددة" },
+                { "FrmPaymentBig", "سندات الصرف المتعددة" },
+                { "FrmDailyRestrictionsTest", "القيود اليومية المعلقة" },
+                { "FrmDesignerReport", "مصمم التقارير" },
+                { "FrmRPMovementsDailyReport", "تقرير الحركة اليومية" },
+                { "FrmRPStoresGardbyProperties", "تقرير أرصدة المخزون حسب الخصائص" },
+                { "FrmRPLeadger", "دفتر الأستاذ" },
+                { "FrmRPProfitAndLossAccount", "تقرير الأرباح والخسائر" },
+                { "FrmRPMizaniyah", "الميزانية العمومية" },
+                { "FrmAllOrders", "فواتير المبيعات" },
+                { "FrmAllOrederReturn", "مرتجعات المبيعات" },
+                { "FrmAllPurches", "فواتير المشتريات" },
+                { "FrmAllPurchesReturn", "مرتجعات المشتريات" },
+                { "FrmAllOrdersDetails", "تفاصيل فواتير المبيعات" },
+                { "FrmAllOrdersReturnDetails", "تفاصيل مرتجعات المبيعات" },
+                { "FrmAllPurchesDetails", "تفاصيل فواتير المشتريات" },
+                { "FrmAllPurchesReturnDetails", "تفاصيل مرتجعات المشتريات" },
+                { "FrmAllOrdersRestaurant", "تقرير مبيعات المطاعم" },
+                { "FrmCheckOut", "تسوية المخزون" },
+                { "FrmRPMovementItem", "حركة صنف" },
+                { "FrmAllOrdersProfit", "أرباح المبيعات" },
+                { "FrmRPMizan", "ميزان المراجعة" },
+                { "FrmRPMizanTotal", "ميزان المراجعة الإجمالي" },
+                { "FrmRPMizanGroups", "ميزان المراجعة حسب المجموعات" },
+                { "FrmEmployee", "الموظفون" },
+                { "FrmPayrollTemp", "مسير الرواتب المؤقت" },
+                { "FrmPayroll", "مسير الرواتب" },
+                { "FrmCashirPharm", "نقطة بيع الصيدلية" },
+                { "FrmCashirWashing", "نقطة بيع المغسلة" },
+                { "FrmAllOrdersProfitByGroup", "أرباح المبيعات حسب المجموعة" },
+                { "FrmAllOrdersProfitByItems", "أرباح المبيعات حسب الصنف" },
+                { "FrmOrdersReturnNoPurchCode", "مرتجعات المبيعات دون فاتورة أصلية" },
+                { "FrmPurchasesReturnNoPurchCode", "مرتجعات المشتريات دون فاتورة أصلية" }
             };
 
             string caption;
@@ -718,6 +847,54 @@ namespace GTSErpSystem
                      .Replace("Items", "الأصناف");
 
             return "شاشة " + raw;
+        }
+
+        private static string GetModuleDescription(ModuleEntry module)
+        {
+            string caption = module.Caption;
+            if (caption.StartsWith("شاشة ", StringComparison.Ordinal))
+                caption = caption.Substring("شاشة ".Length);
+
+            switch (module.FormType.Name)
+            {
+                case "FrmUsers":
+                    return "إضافة المستخدمين وإدارة حساباتهم";
+                case "FrmGroups":
+                    return "إنشاء مجموعات المستخدمين وتنظيمها";
+                case "FrmSecurityGroup":
+                    return "تحديد صلاحيات الدخول والعمليات للمجموعات";
+                case "FrmSetting":
+                    return "تهيئة إعدادات النظام العامة";
+                case "FrmPrinterCashier":
+                    return "ضبط طباعة فواتير وإيصالات نقطة البيع";
+                case "FrmDefualtAccount":
+                    return "ربط الحسابات الافتراضية وإعدادات المستودعات";
+                case "FrmDefualtCustomer":
+                    return "ربط الحسابات الافتراضية للعملاء";
+                case "FrmCostCenter":
+                    return "إدارة مراكز التكلفة وبياناتها";
+                case "FrmProjects":
+                    return "إدارة المشاريع ومراكزها";
+                case "FrmAccountTree":
+                    return "استعراض وإدارة دليل الحسابات";
+                case "FrmDailyRestrictions":
+                    return "إدخال القيود اليومية ومراجعتها";
+            }
+
+            if (module.Category == "التقارير")
+                return "عرض " + caption;
+            if (module.Category == "المبيعات" || module.Category == "المشتريات")
+                return "تسجيل ومتابعة " + caption;
+            if (module.Category == "السندات")
+                return "إدارة " + caption + " والحركة المالية";
+            if (module.Category == "المخزون والأصناف")
+                return "إدارة " + caption + " وحركة المخزون";
+            if (module.Category == "الأمن والصلاحيات")
+                return "إدارة " + caption + " والوصول للنظام";
+            if (module.Category == "الإعدادات")
+                return "تهيئة " + caption;
+
+            return "إدارة " + caption + " وبياناتها";
         }
 
         private void Navigate(string category)
@@ -788,17 +965,17 @@ namespace GTSErpSystem
                         delegate { OpenModule(module); });
                 }
 
-                ResultCount.Text = Modules.Count + " شاشة متاحة بالنظام";
+                ResultCount.Text = Modules.Count + " شاشة متاحة بصلاحياتك";
             }
             else
             {
                 foreach (ModuleEntry module in matches)
                 {
-                    AddTile(module.Caption, module.Category + "  •  فتح الشاشة",
+                    AddTile(module.Caption, GetModuleDescription(module),
                         delegate { OpenModule(module); });
                 }
 
-                ResultCount.Text = matches.Count + " نتيجة";
+                ResultCount.Text = matches.Count + " شاشة حسب صلاحياتك";
 
                 if (matches.Count == 0)
                 {
