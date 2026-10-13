@@ -748,86 +748,85 @@ namespace GTSErpSystem
 
         private static string GetCaption(Type type)
         {
-            var names = new Dictionary<string, string>(
-                StringComparer.OrdinalIgnoreCase)
-            {
-                { "FrmAccountTree", "شجرة الحسابات" },
-                { "FrmDefualtAccount", "الحسابات الافتراضية" },
-                { "FrmDefualtCustomer", "حسابات العملاء الافتراضية" },
-                { "FrmUsers", "المستخدمون" },
-                { "FrmGroups", "مجموعات المستخدمين" },
-                { "FrmSecurityGroup", "صلاحيات المجموعات" },
-                { "FrmOpenQuantity", "كميات افتتاحية" },
-                { "FrmVatReport", "تقرير ضريبة القيمة المضافة" },
-                { "FrmPrinterCashier", "إعدادات طباعة فواتير نقطة البيع" },
-                { "FrmSetting", "إعدادات النظام العامة" },
-                { "FrmCardAccount", "بطاقة الحساب" },
-                { "FrmDailyRestrictions", "القيود اليومية" },
-                { "FrmCostCenter", "مراكز التكلفة" },
-                { "FrmProjects", "المشاريع" },
-                { "FrmReceipts", "سندات القبض" },
-                { "FrmPayment", "سندات الصرف" },
-                { "FrmCashir", "نقطة البيع" },
-                { "FrmCashirRestaurant", "نقطة بيع المطاعم" },
-                { "FrmOrders", "فواتير المبيعات" },
-                { "FrmOrderReturn", "مرتجعات المبيعات" },
-                { "FrmPurchases", "فواتير المشتريات" },
-                { "FrmPurches", "فواتير المشتريات" },
-                { "FrmPurchasesReturn", "مرتجعات المشتريات" },
-                { "FrmItems", "الأصناف" },
-                { "FrmStores", "المخازن" },
-                { "FrmStoresTransfer", "تحويل المخزون" },
-                { "FrmCustomer", "العملاء" },
-                { "FrmSuppliers", "الموردون" },
-                { "FrmBranches", "الفروع" },
-                { "FrmSalesMan", "مندوبي المبيعات" },
-                { "FrmSetting", "إعدادات النظام" },
-                { "FrmBackUp", "النسخ الاحتياطي" },
-                { "FrmImportExcel", "استيراد Excel" },
-                { "FrmGuarantee", "الضمانات" },
-                { "FrmContract", "العقود" },
-                { "FrmRent", "الإيجارات" },
-                { "FrmPriceOffer", "عروض الأسعار" },
-                { "FrmSearch", "البحث" },
-                { "FrmCompany", "الشركات" },
-                { "FrmUnit", "وحدات القياس" },
-                { "FrmSuppliers", "الموردون" },
-                { "FrmSalesMan", "مندوبو المبيعات" },
-                { "FrmPurchaseOrder", "أوامر الشراء" },
-                { "FrmReceiptsBig", "سندات القبض المتعددة" },
-                { "FrmPaymentBig", "سندات الصرف المتعددة" },
-                { "FrmDailyRestrictionsTest", "القيود اليومية المعلقة" },
-                { "FrmDesignerReport", "مصمم التقارير" },
-                { "FrmRPMovementsDailyReport", "تقرير الحركة اليومية" },
-                { "FrmRPStoresGardbyProperties", "تقرير أرصدة المخزون حسب الخصائص" },
-                { "FrmRPLeadger", "دفتر الأستاذ" },
-                { "FrmRPProfitAndLossAccount", "تقرير الأرباح والخسائر" },
-                { "FrmRPMizaniyah", "الميزانية العمومية" },
-                { "FrmAllOrders", "فواتير المبيعات" },
-                { "FrmAllOrederReturn", "مرتجعات المبيعات" },
-                { "FrmAllPurches", "فواتير المشتريات" },
-                { "FrmAllPurchesReturn", "مرتجعات المشتريات" },
-                { "FrmAllOrdersDetails", "تفاصيل فواتير المبيعات" },
-                { "FrmAllOrdersReturnDetails", "تفاصيل مرتجعات المبيعات" },
-                { "FrmAllPurchesDetails", "تفاصيل فواتير المشتريات" },
-                { "FrmAllPurchesReturnDetails", "تفاصيل مرتجعات المشتريات" },
-                { "FrmAllOrdersRestaurant", "تقرير مبيعات المطاعم" },
-                { "FrmCheckOut", "تسوية المخزون" },
-                { "FrmRPMovementItem", "حركة صنف" },
-                { "FrmAllOrdersProfit", "أرباح المبيعات" },
-                { "FrmRPMizan", "ميزان المراجعة" },
-                { "FrmRPMizanTotal", "ميزان المراجعة الإجمالي" },
-                { "FrmRPMizanGroups", "ميزان المراجعة حسب المجموعات" },
-                { "FrmEmployee", "الموظفون" },
-                { "FrmPayrollTemp", "مسير الرواتب المؤقت" },
-                { "FrmPayroll", "مسير الرواتب" },
-                { "FrmCashirPharm", "نقطة بيع الصيدلية" },
-                { "FrmCashirWashing", "نقطة بيع المغسلة" },
-                { "FrmAllOrdersProfitByGroup", "أرباح المبيعات حسب المجموعة" },
-                { "FrmAllOrdersProfitByItems", "أرباح المبيعات حسب الصنف" },
-                { "FrmOrdersReturnNoPurchCode", "مرتجعات المبيعات دون فاتورة أصلية" },
-                { "FrmPurchasesReturnNoPurchCode", "مرتجعات المشتريات دون فاتورة أصلية" }
-            };
+            // Use indexer assignments so repeated keys cannot abort startup.
+            // When a legacy key is repeated, the final caption in this list wins.
+            var names = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            names["FrmAccountTree"] = "شجرة الحسابات";
+            names["FrmDefualtAccount"] = "الحسابات الافتراضية";
+            names["FrmDefualtCustomer"] = "حسابات العملاء الافتراضية";
+            names["FrmUsers"] = "المستخدمون";
+            names["FrmGroups"] = "مجموعات المستخدمين";
+            names["FrmSecurityGroup"] = "صلاحيات المجموعات";
+            names["FrmOpenQuantity"] = "كميات افتتاحية";
+            names["FrmVatReport"] = "تقرير ضريبة القيمة المضافة";
+            names["FrmPrinterCashier"] = "إعدادات طباعة فواتير نقطة البيع";
+            names["FrmSetting"] = "إعدادات النظام العامة";
+            names["FrmCardAccount"] = "بطاقة الحساب";
+            names["FrmDailyRestrictions"] = "القيود اليومية";
+            names["FrmCostCenter"] = "مراكز التكلفة";
+            names["FrmProjects"] = "المشاريع";
+            names["FrmReceipts"] = "سندات القبض";
+            names["FrmPayment"] = "سندات الصرف";
+            names["FrmCashir"] = "نقطة البيع";
+            names["FrmCashirRestaurant"] = "نقطة بيع المطاعم";
+            names["FrmOrders"] = "فواتير المبيعات";
+            names["FrmOrderReturn"] = "مرتجعات المبيعات";
+            names["FrmPurchases"] = "فواتير المشتريات";
+            names["FrmPurches"] = "فواتير المشتريات";
+            names["FrmPurchasesReturn"] = "مرتجعات المشتريات";
+            names["FrmItems"] = "الأصناف";
+            names["FrmStores"] = "المخازن";
+            names["FrmStoresTransfer"] = "تحويل المخزون";
+            names["FrmCustomer"] = "العملاء";
+            names["FrmSuppliers"] = "الموردون";
+            names["FrmBranches"] = "الفروع";
+            names["FrmSalesMan"] = "مندوبي المبيعات";
+            names["FrmSetting"] = "إعدادات النظام";
+            names["FrmBackUp"] = "النسخ الاحتياطي";
+            names["FrmImportExcel"] = "استيراد Excel";
+            names["FrmGuarantee"] = "الضمانات";
+            names["FrmContract"] = "العقود";
+            names["FrmRent"] = "الإيجارات";
+            names["FrmPriceOffer"] = "عروض الأسعار";
+            names["FrmSearch"] = "البحث";
+            names["FrmCompany"] = "الشركات";
+            names["FrmUnit"] = "وحدات القياس";
+            names["FrmSuppliers"] = "الموردون";
+            names["FrmSalesMan"] = "مندوبو المبيعات";
+            names["FrmPurchaseOrder"] = "أوامر الشراء";
+            names["FrmReceiptsBig"] = "سندات القبض المتعددة";
+            names["FrmPaymentBig"] = "سندات الصرف المتعددة";
+            names["FrmDailyRestrictionsTest"] = "القيود اليومية المعلقة";
+            names["FrmDesignerReport"] = "مصمم التقارير";
+            names["FrmRPMovementsDailyReport"] = "تقرير الحركة اليومية";
+            names["FrmRPStoresGardbyProperties"] = "تقرير أرصدة المخزون حسب الخصائص";
+            names["FrmRPLeadger"] = "دفتر الأستاذ";
+            names["FrmRPProfitAndLossAccount"] = "تقرير الأرباح والخسائر";
+            names["FrmRPMizaniyah"] = "الميزانية العمومية";
+            names["FrmAllOrders"] = "فواتير المبيعات";
+            names["FrmAllOrederReturn"] = "مرتجعات المبيعات";
+            names["FrmAllPurches"] = "فواتير المشتريات";
+            names["FrmAllPurchesReturn"] = "مرتجعات المشتريات";
+            names["FrmAllOrdersDetails"] = "تفاصيل فواتير المبيعات";
+            names["FrmAllOrdersReturnDetails"] = "تفاصيل مرتجعات المبيعات";
+            names["FrmAllPurchesDetails"] = "تفاصيل فواتير المشتريات";
+            names["FrmAllPurchesReturnDetails"] = "تفاصيل مرتجعات المشتريات";
+            names["FrmAllOrdersRestaurant"] = "تقرير مبيعات المطاعم";
+            names["FrmCheckOut"] = "تسوية المخزون";
+            names["FrmRPMovementItem"] = "حركة صنف";
+            names["FrmAllOrdersProfit"] = "أرباح المبيعات";
+            names["FrmRPMizan"] = "ميزان المراجعة";
+            names["FrmRPMizanTotal"] = "ميزان المراجعة الإجمالي";
+            names["FrmRPMizanGroups"] = "ميزان المراجعة حسب المجموعات";
+            names["FrmEmployee"] = "الموظفون";
+            names["FrmPayrollTemp"] = "مسير الرواتب المؤقت";
+            names["FrmPayroll"] = "مسير الرواتب";
+            names["FrmCashirPharm"] = "نقطة بيع الصيدلية";
+            names["FrmCashirWashing"] = "نقطة بيع المغسلة";
+            names["FrmAllOrdersProfitByGroup"] = "أرباح المبيعات حسب المجموعة";
+            names["FrmAllOrdersProfitByItems"] = "أرباح المبيعات حسب الصنف";
+            names["FrmOrdersReturnNoPurchCode"] = "مرتجعات المبيعات دون فاتورة أصلية";
+            names["FrmPurchasesReturnNoPurchCode"] = "مرتجعات المشتريات دون فاتورة أصلية";
 
             string caption;
             if (names.TryGetValue(type.Name, out caption))
