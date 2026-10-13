@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using DevExpress.Skins;
 using DevExpress.UserSkins;
@@ -26,6 +27,7 @@ internal static class Program
 		// GetPass(); // temporarily disabled for activation diagnosis
 		// Respect the connection saved by FrmSqlConnection. If no saved settings
 		// exist, leave the deployed app.config connection unchanged.
+		System.Windows.Forms.Application.Idle += AlSaqarTheme.OnApplicationIdle;
 		string savedConnectionPath = System.IO.Path.Combine(Application.StartupPath, "ERP.xml");
 		if (System.IO.File.Exists(savedConnectionPath))
 		{
@@ -57,7 +59,6 @@ internal static class Program
 		if (num > 0)
 		{
 			LoginDetails.Status = "نسخة مرخصة";
-			System.Windows.Forms.Application.Idle += AlSaqarTheme.OnApplicationIdle;
 			Application.Run(new FrmLogin3());
 		}
 		else
@@ -152,15 +153,7 @@ internal static class AlSaqarTheme
         System.Drawing.Color.FromArgb(201, 163, 74);
     private static readonly System.Drawing.Color White =
         System.Drawing.Color.White;
-
-    private static readonly string[] MainForms = new string[]
-    {
-        "FrmLogin3", "FrmBlue", "FrmGold", "FrmGoldPlus",
-        "FrmGoldPlusImportExport", "FrmGoldPlusTransportation",
-        "FrmLight2", "FrmPremium", "FrmReportAll", "FrmRestaurant",
-        "FrmRestaurantSilver", "FrmSilver", "FrmSilverPlus",
-        "FrmSilverPlusWashing", "FrmWindow"
-    };
+    private const string BrandName = "الصقر لأنظمة المحاسبة";
 
     private static readonly System.Collections.Generic.HashSet<System.Windows.Forms.Control>
         Seen = new System.Collections.Generic.HashSet<System.Windows.Forms.Control>();
@@ -180,15 +173,15 @@ internal static class AlSaqarTheme
 
     private static void BrandCaption(System.Windows.Forms.Form form)
     {
-        string name = form.GetType().Name;
-        string title = form.Text ?? System.String.Empty;
-        bool main = System.Array.IndexOf(MainForms, name) >= 0;
-        bool oldBrand =
-            title.IndexOf("GTS", System.StringComparison.OrdinalIgnoreCase) >= 0 ||
-            title.IndexOf("ERP", System.StringComparison.OrdinalIgnoreCase) >= 0;
+        string title = (form.Text ?? System.String.Empty).Trim();
+        if (title.StartsWith(BrandName, System.StringComparison.Ordinal))
+            return;
 
-        if (main || oldBrand)
-            form.Text = "الصقر لأنظمة المحاسبة";
+        title = Regex.Replace(title, @"(?i)\b(?:GTS|ERP)\b", String.Empty)
+            .Trim(' ', '-', '|', ':', '–', '—');
+        form.Text = String.IsNullOrWhiteSpace(title)
+            ? BrandName
+            : BrandName + " | " + title;
     }
 
     private static void ApplyControl(System.Windows.Forms.Control control)
@@ -326,5 +319,3 @@ internal static class AlSaqarTheme
     }
 }
 }
-
-
