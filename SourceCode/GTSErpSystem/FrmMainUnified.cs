@@ -180,104 +180,81 @@ namespace GTSErpSystem
             var root = new TableLayoutPanel
             {
                 Dock = DockStyle.Fill,
-                ColumnCount = 2,
-                RowCount = 1,
-                RightToLeft = RightToLeft.Yes,
+                ColumnCount = 1,
+                RowCount = 2,
                 BackColor = Background,
                 Margin = Padding.Empty,
                 Padding = Padding.Empty
             };
 
-            root.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 250));
-            root.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            root.RowStyles.Add(new RowStyle(SizeType.Absolute, 116));
+            root.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
 
-            var sidebar = BuildSidebar();
-            var content = BuildContent();
-
-            root.Controls.Add(sidebar, 0, 0);
-            root.Controls.Add(content, 1, 0);
+            root.Controls.Add(BuildTopBar(), 0, 0);
+            root.Controls.Add(BuildContent(), 0, 1);
             Controls.Add(root);
         }
 
-        private Control BuildSidebar()
+        private Control BuildTopBar()
         {
-            var side = new TableLayoutPanel
+            var topBar = new TableLayoutPanel
             {
                 Dock = DockStyle.Fill,
                 ColumnCount = 1,
-                RowCount = 3,
+                RowCount = 2,
                 BackColor = Navy,
-                RightToLeft = RightToLeft.Yes,
                 Margin = Padding.Empty,
                 Padding = Padding.Empty
             };
 
-            side.RowStyles.Add(new RowStyle(SizeType.Absolute, 112));
-            side.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-            side.RowStyles.Add(new RowStyle(SizeType.Absolute, 62));
+            topBar.RowStyles.Add(new RowStyle(SizeType.Absolute, 62));
+            topBar.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
 
-            var brand = new Panel { Dock = DockStyle.Fill, BackColor = Navy };
-            brand.Controls.Add(new Label
-            {
-                Text = "الصقر",
-                Dock = DockStyle.Top,
-                Height = 55,
-                TextAlign = ContentAlignment.MiddleCenter,
-                Font = new Font("Segoe UI", 22F, FontStyle.Bold),
-                ForeColor = White
-            });
-            brand.Controls.Add(new Label
-            {
-                Text = "لأنظمة المحاسبة",
-                Dock = DockStyle.Bottom,
-                Height = 38,
-                TextAlign = ContentAlignment.MiddleCenter,
-                Font = new Font("Segoe UI", 11F, FontStyle.Regular),
-                ForeColor = Color.FromArgb(220, 226, 235)
-            });
-
-            var navigation = new FlowLayoutPanel
+            var header = new Panel
             {
                 Dock = DockStyle.Fill,
-                FlowDirection = FlowDirection.TopDown,
-                WrapContents = false,
-                AutoScroll = true,
-                BackColor = Navy,
-                Padding = new Padding(10, 8, 10, 8),
-                RightToLeft = RightToLeft.Yes
+                BackColor = White,
+                Padding = new Padding(20, 5, 20, 5)
             };
-
-            foreach (string category in Categories)
+            header.Controls.Add(new Label
             {
-                var navButton = new Button
-                {
-                    Text = "   " + category,
-                    Width = 215,
-                    Height = 45,
-                    Margin = new Padding(0, 3, 0, 3),
-                    FlatStyle = FlatStyle.Flat,
-                    BackColor = category == SelectedCategory ? Blue : Navy,
-                    ForeColor = White,
-                    Font = new Font("Segoe UI", 10F, FontStyle.Regular),
-                    TextAlign = ContentAlignment.MiddleRight,
-                    Cursor = Cursors.Hand,
-                    UseVisualStyleBackColor = false,
-                    Tag = category
-                };
-                navButton.FlatAppearance.BorderSize = 0;
-                navButton.Click += delegate
-                {
-                    Navigate(category);
-                };
-                navigation.Controls.Add(navButton);
-            }
+                Text = "الصقر",
+                Dock = DockStyle.Right,
+                Width = 105,
+                TextAlign = ContentAlignment.MiddleRight,
+                Font = new Font("Segoe UI", 21F, FontStyle.Bold),
+                ForeColor = Navy
+            });
 
-            var footer = new Panel { Dock = DockStyle.Fill, BackColor = Navy };
+            var brandDescription = new Label
+            {
+                Text = "لأنظمة المحاسبة",
+                Dock = DockStyle.Right,
+                Width = 145,
+                TextAlign = ContentAlignment.MiddleLeft,
+                Font = new Font("Segoe UI", 10F),
+                ForeColor = Blue
+            };
+            header.Controls.Add(brandDescription);
+
+            UserInfo = new Label
+            {
+                Text = GetUserInfo(),
+                Dock = DockStyle.Left,
+                Width = 370,
+                TextAlign = ContentAlignment.MiddleLeft,
+                Font = new Font("Segoe UI", 10F),
+                ForeColor = Blue
+            };
+            header.Controls.Add(UserInfo);
+
             var exitButton = new Button
             {
                 Text = "خروج من النظام",
-                Dock = DockStyle.Fill,
-                Margin = new Padding(10),
+                Dock = DockStyle.Left,
+                Width = 126,
+                Height = 38,
+                Margin = new Padding(8),
                 FlatStyle = FlatStyle.Flat,
                 BackColor = Color.FromArgb(120, 44, 49),
                 ForeColor = White,
@@ -299,12 +276,46 @@ namespace GTSErpSystem
                     Application.Exit();
                 }
             };
-            footer.Controls.Add(exitButton);
+            header.Controls.Add(exitButton);
 
-            side.Controls.Add(brand, 0, 0);
-            side.Controls.Add(navigation, 0, 1);
-            side.Controls.Add(footer, 0, 2);
-            return side;
+            var navigation = new FlowLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                FlowDirection = FlowDirection.RightToLeft,
+                WrapContents = false,
+                AutoScroll = true,
+                BackColor = Navy,
+                Padding = new Padding(14, 5, 14, 5),
+                RightToLeft = RightToLeft.Yes
+            };
+
+            foreach (string category in Categories)
+            {
+                var navButton = new Button
+                {
+                    Text = category,
+                    Width = 112,
+                    Height = 40,
+                    Margin = new Padding(3, 1, 3, 1),
+                    FlatStyle = FlatStyle.Flat,
+                    BackColor = category == SelectedCategory ? Blue : Navy,
+                    ForeColor = White,
+                    Font = new Font("Segoe UI", 9.5F,
+                        category == SelectedCategory ? FontStyle.Bold : FontStyle.Regular),
+                    TextAlign = ContentAlignment.MiddleCenter,
+                    Cursor = Cursors.Hand,
+                    UseVisualStyleBackColor = false,
+                    Tag = category
+                };
+                navButton.FlatAppearance.BorderSize = 0;
+                navButton.FlatAppearance.BorderColor = Gold;
+                navButton.Click += delegate { Navigate(category); };
+                navigation.Controls.Add(navButton);
+            }
+
+            topBar.Controls.Add(header, 0, 0);
+            topBar.Controls.Add(navigation, 0, 1);
+            return topBar;
         }
 
         private Control BuildContent()
