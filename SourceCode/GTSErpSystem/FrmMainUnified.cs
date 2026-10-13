@@ -645,45 +645,44 @@ namespace GTSErpSystem
 
         private static string GetCaption(Type type)
         {
-            var names = new Dictionary<string, string>(
-                StringComparer.OrdinalIgnoreCase)
-            {
-                { "FrmAccountTree", "شجرة الحسابات" },
-                { "FrmUsers", "المستخدمون" },
-                { "FrmGroups", "مجموعات المستخدمين" },
-                { "FrmSecurityGroup", "صلاحيات المجموعات" },
-                { "FrmOpenQuantity", "كميات افتتاحية" },
-                { "FrmVatReport", "تقرير ضريبة القيمة المضافة" },
-                { "FrmPrinterCashier", "إعدادات طباعة نقطة البيع" },
-                { "FrmCardAccount", "بطاقة الحساب" },
-                { "FrmDailyRestrictions", "القيود اليومية" },
-                { "FrmCostCenter", "مراكز التكلفة" },
-                { "FrmProjects", "المشاريع" },
-                { "FrmReceipts", "سندات القبض" },
-                { "FrmPayment", "سندات الصرف" },
-                { "FrmCashir", "نقطة البيع" },
-                { "FrmCashirRestaurant", "نقطة بيع المطاعم" },
-                { "FrmOrders", "فواتير المبيعات" },
-                { "FrmOrderReturn", "مرتجعات المبيعات" },
-                { "FrmPurchases", "فواتير المشتريات" },
-                { "FrmPurches", "فواتير المشتريات" },
-                { "FrmPurchasesReturn", "مرتجعات المشتريات" },
-                { "FrmItems", "الأصناف" },
-                { "FrmStores", "المخازن" },
-                { "FrmStoresTransfer", "تحويل المخزون" },
-                { "FrmCustomer", "العملاء" },
-                { "FrmSuppliers", "الموردون" },
-                { "FrmBranches", "الفروع" },
-                { "FrmSalesMan", "مندوبي المبيعات" },
-                { "FrmSetting", "إعدادات النظام" },
-                { "FrmBackUp", "النسخ الاحتياطي" },
-                { "FrmImportExcel", "استيراد Excel" },
-                { "FrmGuarantee", "الضمانات" },
-                { "FrmContract", "العقود" },
-                { "FrmRent", "الإيجارات" },
-                { "FrmPriceOffer", "عروض الأسعار" },
-                { "FrmSearch", "البحث" }
-            };
+            // Use the indexer instead of collection-initializer Add calls so a
+            // repeated key (including a casing-only duplicate) cannot crash startup.
+            var names = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            names["FrmAccountTree"] = "شجرة الحسابات";
+            names["FrmUsers"] = "المستخدمون";
+            names["FrmGroups"] = "مجموعات المستخدمين";
+            names["FrmSecurityGroup"] = "صلاحيات المجموعات";
+            names["FrmOpenQuantity"] = "كميات افتتاحية";
+            names["FrmVatReport"] = "تقرير ضريبة القيمة المضافة";
+            names["FrmPrinterCashier"] = "إعدادات طباعة نقطة البيع";
+            names["FrmCardAccount"] = "بطاقة الحساب";
+            names["FrmDailyRestrictions"] = "القيود اليومية";
+            names["FrmCostCenter"] = "مراكز التكلفة";
+            names["FrmProjects"] = "المشاريع";
+            names["FrmReceipts"] = "سندات القبض";
+            names["FrmPayment"] = "سندات الصرف";
+            names["FrmCashir"] = "نقطة البيع";
+            names["FrmCashirRestaurant"] = "نقطة بيع المطاعم";
+            names["FrmOrders"] = "فواتير المبيعات";
+            names["FrmOrderReturn"] = "مرتجعات المبيعات";
+            names["FrmPurchases"] = "فواتير المشتريات";
+            names["FrmPurches"] = "فواتير المشتريات";
+            names["FrmPurchasesReturn"] = "مرتجعات المشتريات";
+            names["FrmItems"] = "الأصناف";
+            names["FrmStores"] = "المخازن";
+            names["FrmStoresTransfer"] = "تحويل المخزون";
+            names["FrmCustomer"] = "العملاء";
+            names["FrmSuppliers"] = "الموردون";
+            names["FrmBranches"] = "الفروع";
+            names["FrmSalesMan"] = "مندوبي المبيعات";
+            names["FrmSetting"] = "إعدادات النظام";
+            names["FrmBackUp"] = "النسخ الاحتياطي";
+            names["FrmImportExcel"] = "استيراد Excel";
+            names["FrmGuarantee"] = "الضمانات";
+            names["FrmContract"] = "العقود";
+            names["FrmRent"] = "الإيجارات";
+            names["FrmPriceOffer"] = "عروض الأسعار";
+            names["FrmSearch"] = "البحث";
 
             string caption;
             if (names.TryGetValue(type.Name, out caption))
