@@ -1,0 +1,25 @@
+public interface IAppNavigation
+{
+    void OpenDashboard();
+    void OpenInvoices();
+}
+
+public class AppNavigation : IAppNavigation
+{
+    private readonly MainForm _mainForm;
+
+    public AppNavigation(MainForm mainForm)
+    {
+        _mainForm = mainForm;
+    }
+
+    public void OpenDashboard()
+    {
+        _mainForm.ShowScreen(new DashboardControl());
+    }
+
+    public void OpenInvoices()
+    {
+        _mainForm.ShowScreen(new InvoicesControl());
+    }
+}
