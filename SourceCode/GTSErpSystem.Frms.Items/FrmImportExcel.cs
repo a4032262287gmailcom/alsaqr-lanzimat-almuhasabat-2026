@@ -880,8 +880,50 @@ public class FrmImportExcel : XtraForm
 		}
 	}
 
-	private void BtnEditGrid_Click(object sender, EventArgs e)
+	private void BtnUnit2Price_Click(object sender, EventArgs e)
 	{
+		ApplyUnitPrices(CKUnit2.Checked, new[] { TxtPerUnit2Price1, TxtPerUnit2Price2, TxtPerUnit2Price3 }, 31);
+	}
+
+	private void BtnUnit3Price_Click(object sender, EventArgs e)
+	{
+		ApplyUnitPrices(CKUnit3.Checked, new[] { TxtPerUnit3Price1, TxtPerUnit3Price2, TxtPerUnit3Price3 }, 43);
+	}
+
+	private void ApplyUnitPrices(bool unitEnabled, NumericUpDown[] prices, int firstPriceColumn)
+	{
+		if (!unitEnabled)
+		{
+			return;
+		}
+
+		if (dataGridView1.DataSource == null ||
+			dataGridView1.Columns.Count < firstPriceColumn + prices.Length ||
+			!dataGridView1.Rows.Cast<DataGridViewRow>().Any(row => !row.IsNewRow))
+		{
+			MessageBox.Show("حمّل ملف الأصناف الصحيح قبل تطبيق الأسعار.");
+			return;
+		}
+
+		try
+		{
+			foreach (DataGridViewRow row in dataGridView1.Rows)
+			{
+				if (row.IsNewRow)
+				{
+					continue;
+				}
+
+				for (int i = 0; i < prices.Length; i++)
+				{
+					row.Cells[firstPriceColumn + i].Value = prices[i].Value;
+				}
+			}
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show("تعذر تطبيق أسعار الوحدة على الأصناف: " + ex.Message);
+		}
 	}
 
 	private void BtnUnit1_Click(object sender, EventArgs e)
@@ -1036,12 +1078,7 @@ public class FrmImportExcel : XtraForm
 
 	private void BtnUnit1Price_Click(object sender, EventArgs e)
 	{
-		for (int i = 0; i < dataGridView1.Rows.Count - 1; i++)
-		{
-			if (CKUnit1.Checked)
-			{
-			}
-		}
+		ApplyUnitPrices(CKUnit1.Checked, new[] { TxtPerUnit1Price1, TxtPerUnit1Price2, TxtPerUnit1Price3 }, 18);
 	}
 
 	public void SetInitialRow()
@@ -1910,7 +1947,7 @@ public class FrmImportExcel : XtraForm
 		this.BtnUnit3Price.Name = "BtnUnit3Price";
 		this.BtnUnit3Price.Size = new System.Drawing.Size(29, 22);
 		this.BtnUnit3Price.TabIndex = 4;
-		this.BtnUnit3Price.Click += new System.EventHandler(BtnEditGrid_Click);
+		this.BtnUnit3Price.Click += new System.EventHandler(BtnUnit3Price_Click);
 		this.BtnUnit2Price.Appearance.ForeColor = System.Drawing.Color.Black;
 		this.BtnUnit2Price.Appearance.Options.UseForeColor = true;
 		this.BtnUnit2Price.Enabled = false;
@@ -1920,7 +1957,7 @@ public class FrmImportExcel : XtraForm
 		this.BtnUnit2Price.Name = "BtnUnit2Price";
 		this.BtnUnit2Price.Size = new System.Drawing.Size(29, 22);
 		this.BtnUnit2Price.TabIndex = 4;
-		this.BtnUnit2Price.Click += new System.EventHandler(BtnEditGrid_Click);
+		this.BtnUnit2Price.Click += new System.EventHandler(BtnUnit2Price_Click);
 		this.BtnUnit1Price.Appearance.ForeColor = System.Drawing.Color.Black;
 		this.BtnUnit1Price.Appearance.Options.UseForeColor = true;
 		this.BtnUnit1Price.Enabled = false;

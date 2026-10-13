@@ -18,6 +18,7 @@ using DevExpress.XtraGrid.Views.Grid;
 using GTSErpSystem.BLL.Account;
 using GTSErpSystem.BLL.Cust_Sup;
 using GTSErpSystem.BLL.Main.Setting;
+using GTSErpSystem.BLL.Security;
 using GTSErpSystem.Frms.Cust_Sup.Search;
 using GTSErpSystem.Frms.FrmsMain.Search;
 
@@ -30,6 +31,8 @@ public class FrmDefualtAccount : XtraForm
 	private Class_DefualtAccount DFLTAccNT = new Class_DefualtAccount();
 
 	private Class_Stores STR = new Class_Stores();
+
+	private CheckPrvlg CheckPermession = new CheckPrvlg();
 
 	private IContainer components = null;
 
@@ -198,6 +201,28 @@ public class FrmDefualtAccount : XtraForm
 
 	private void BindStores()
 	{
+		TxtStoreMain.DataSource = STR.GetAll();
+		TxtStoreMain.DisplayMember = "Store_Name";
+		TxtStoreMain.ValueMember = "ID";
+		TxtStore2.DataSource = STR.GetAll();
+		TxtStore2.DisplayMember = "Store_Name";
+		TxtStore2.ValueMember = "ID";
+
+		var setting = DFLTAccNT.GetSettings(
+			Convert.ToInt32(LblBranches.Text)).FirstOrDefault();
+		if (setting == null)
+		{
+			TxtStoreMain.SelectedIndex = -1;
+			TxtStore2.SelectedIndex = -1;
+			return;
+		}
+
+		TxtStoreMain.SelectedIndex = -1;
+		TxtStore2.SelectedIndex = -1;
+		if (setting.StoreID.HasValue)
+			TxtStoreMain.SelectedValue = setting.StoreID.Value;
+		if (setting.StoreIDWaiying.HasValue)
+			TxtStore2.SelectedValue = setting.StoreIDWaiying.Value;
 	}
 
 	private void Clear()
@@ -260,39 +285,45 @@ public class FrmDefualtAccount : XtraForm
 
 	private void BtnSave_Click(object sender, EventArgs e)
 	{
+		if (!CheckPermession.CheckUserPageEventSave(LoginDetails.GroupID, 39))
+		{
+			MessageBox.Show("عفوا، لا تملك صلاحية حفظ الحسابات الافتراضية.",
+				"مستكشف صلاحيات المستخدمين", MessageBoxButtons.OK,
+				MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1,
+				MessageBoxOptions.RightAlign);
+			return;
+		}
+
 		try
 		{
-			if (TxtStoreMain.Text != null && TxtStore2.Text != null && datatable.Rows.Count > 0)
-			{
-				int num = 0;
-				num = DFLTAccNT.Insert(Convert.ToInt32(LblBranches.Text), datatable);
-				if (num > 0)
-				{
-					MessageBox.Show("تم حفظ بيانات الحسابات الافتراضية لفرع  ( " + TxtNameBranch.Text + " ) بنجاح", "نجاح الحفظ", MessageBoxButtons.OK, MessageBoxIcon.Asterisk, MessageBoxDefaultButton.Button3, MessageBoxOptions.RightAlign);
-				}
-				else
-				{
-					MessageBox.Show("عفوا، فشل حفظ بيانات الحسابات الافتراضية لفرع  ( " + TxtNameBranch.Text + " ) بنجاح", "فشل الحفظ", MessageBoxButtons.OK, MessageBoxIcon.Hand, MessageBoxDefaultButton.Button3, MessageBoxOptions.RightAlign);
-				}
-			}
-			else if (TxtStoreMain.Text != null)
-			{
-				MessageBox.Show("عفوا، برجاء اختيار المستودع الرئيسي ثم حاول مرة أخري", "مستكشف البيانات", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, MessageBoxDefaultButton.Button3, MessageBoxOptions.RightAlign);
-				TxtStoreMain.Focus();
-			}
-			else if (TxtStore2.Text != null)
-			{
-				MessageBox.Show("عفوا، برجاء اختيار المستودع حجز البضاعة ثم حاول مرة أخري", "مستكشف البيانات", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, MessageBoxDefaultButton.Button3, MessageBoxOptions.RightAlign);
-				TxtStore2.Focus();
-			}
-			else
-			{
-				MessageBox.Show("عفوا، برجاء اختيار الحسابات المقابلة ثم حاول مرة أخري", "مستكشف البيانات", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, MessageBoxDefaultButton.Button3, MessageBoxOptions.RightAlign);
-			}
+			if (TxtStoreMain.SelectedValue == null)
+				throw new InvalidOperationException("اختر المستودع الرئيسي.");
+			if (TxtStore2.SelectedValue == null)
+				throw new InvalidOperationException("اختر مستودع الحجز.");
+
+			int storeMain = Convert.ToInt32(TxtStoreMain.SelectedValue);
+			int storeWaiting = Convert.ToInt32(TxtStore2.SelectedValue);
+			if (storeMain == storeWaiting)
+				throw new InvalidOperationException("يجب أن يكون المستودع الرئيسي مختلفاً عن مستودع الحجز.");
+
+			int result = DFLTAccNT.SaveItemAccountDefaults(
+				Convert.ToInt32(LblBranches.Text), storeMain, storeWaiting, datatable);
+			if (result <= 0)
+				throw new InvalidOperationException("إعدادات الفرع غير موجودة، لم تُحفظ التغييرات.");
+
+			MessageBox.Show(
+				"تم حفظ الحسابات الافتراضية والمستودعات لفرع ( " +
+				TxtNameBranch.Text + " ) بنجاح.",
+				"نجاح الحفظ", MessageBoxButtons.OK, MessageBoxIcon.Information,
+				MessageBoxDefaultButton.Button1, MessageBoxOptions.RightAlign);
 		}
-		catch (Exception)
+		catch (Exception ex)
 		{
-			MessageBox.Show("عفوا، فشل حفظ بيانات الحسابات الافتراضية لفرع  ( " + TxtNameBranch.Text + " ) لوجود حسابات مقابلة لم يتم اختيارها", "فشل الحفظ", MessageBoxButtons.OK, MessageBoxIcon.Hand, MessageBoxDefaultButton.Button3, MessageBoxOptions.RightAlign);
+			MessageBox.Show(
+				"تعذر حفظ الحسابات الافتراضية لفرع ( " +
+				TxtNameBranch.Text + " )." + Environment.NewLine + ex.Message,
+				"فشل الحفظ", MessageBoxButtons.OK, MessageBoxIcon.Error,
+				MessageBoxDefaultButton.Button1, MessageBoxOptions.RightAlign);
 		}
 	}
 
@@ -682,5 +713,3 @@ public class FrmDefualtAccount : XtraForm
 		base.ResumeLayout(false);
 	}
 }
-
-

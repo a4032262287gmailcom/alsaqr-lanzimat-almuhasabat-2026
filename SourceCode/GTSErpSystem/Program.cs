@@ -23,7 +23,7 @@ internal static class Program
 		BonusSkins.Register();
 		SkinManager.EnableFormSkins();
 		LoginDetails.VergDate = "اصدار:VER [1]26.07.08";
-		// GetPass(); // temporarily disabled for activation diagnosis
+		// Legacy activation setup is intentionally excluded from the login startup flow.
 		changeConnection.SaveConnectionString("GTSdbEntities", "Data Source=.\\SQLEXPRESS;Initial Catalog=GtsDb2026;Integrated Security=True;MultipleActiveResultSets=True;Encrypt=False;TrustServerCertificate=True;Connect Timeout=5");
 		int num = changeConnection.TestCon();
 		if (num > 0)
@@ -298,5 +298,4 @@ internal static class AlSaqarTheme
     }
 }
 }
-
 

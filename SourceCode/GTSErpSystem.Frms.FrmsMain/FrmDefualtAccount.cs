@@ -10,6 +10,7 @@ using DevExpress.XtraEditors.Controls;
 using GTSErpSystem.BLL.Account;
 using GTSErpSystem.BLL.Cust_Sup;
 using GTSErpSystem.BLL.Main.Setting;
+using GTSErpSystem.BLL.Security;
 using GTSErpSystem.Frms.Cust_Sup.Search;
 using GTSErpSystem.Frms.FrmsMain.Search;
 
@@ -22,6 +23,8 @@ public class FrmDefualtAccount : XtraForm
 	private Class_DefualtAccount DFLTAccNT = new Class_DefualtAccount();
 
 	private Class_Stores STR = new Class_Stores();
+
+	private CheckPrvlg CheckPermession = new CheckPrvlg();
 
 	private IContainer components = null;
 
@@ -959,28 +962,71 @@ public class FrmDefualtAccount : XtraForm
 
 	private void BtnSave_Click(object sender, EventArgs e)
 	{
+		if (!CheckPermession.CheckUserPageEventSave(LoginDetails.GroupID, 39))
+		{
+			MessageBox.Show("عفوا، لا تملك صلاحية حفظ إعدادات الحسابات الافتراضية.",
+				"مستكشف صلاحيات المستخدمين", MessageBoxButtons.OK,
+				MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1,
+				MessageBoxOptions.RightAlign);
+			return;
+		}
+
 		try
 		{
-			if (Convert.ToInt32(TxtStoreMain.SelectedValue) == Convert.ToInt32(TxtStore2.SelectedValue))
+			int branchID = Convert.ToInt32(LblBranches.Text);
+			if (TxtStoreMain.SelectedValue == null || TxtStore2.SelectedValue == null)
+				throw new InvalidOperationException("اختر المستودع الرئيسي ومستودع الحجز.");
+
+			int storeMain = Convert.ToInt32(TxtStoreMain.SelectedValue);
+			int storeWaiting = Convert.ToInt32(TxtStore2.SelectedValue);
+			if (storeMain == storeWaiting)
+				throw new InvalidOperationException("لا يمكن اختيار المستودع نفسه للمستودع الرئيسي ومستودع الحجز.");
+
+			var defaults = new Account_DefualtAccount
 			{
-				MessageBox.Show("عفوا، لايمكن ان يكون المستودع الرئيسي هو نفسه مستودع الحجز", "مستكشف البيانات", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, MessageBoxDefaultButton.Button3, MessageBoxOptions.RightAlign);
-				TxtStoreMain.Focus();
-				return;
-			}
-			int num = 0;
-			if (num > 0)
-			{
-				MessageBox.Show("تم حفظ بيانات الحسابات الافتراضية لفرع  ( " + TxtNameBranch.Text + " ) بنجاح", "نجاح الحفظ", MessageBoxButtons.OK, MessageBoxIcon.Asterisk, MessageBoxDefaultButton.Button3, MessageBoxOptions.RightAlign);
-			}
-			else
-			{
-				MessageBox.Show("عفوا، فشل حفظ بيانات الحسابات الافتراضية لفرع  ( " + TxtNameBranch.Text + " ) بنجاح", "فشل الحفظ", MessageBoxButtons.OK, MessageBoxIcon.Hand, MessageBoxDefaultButton.Button3, MessageBoxOptions.RightAlign);
-			}
+				BranchID = branchID,
+				Acc_CostItemOrder = ReadAccountID(LblCostOrder, "تكلفة الطلب"),
+				Acc_VatNum = ReadAccountID(LblVatNum, "ضريبة القيمة المضافة"),
+				Acc_CashBox = ReadAccountID(LblBoxCash, "الصندوق النقدي"),
+				Acc_OrderCash = ReadAccountID(LblOrderCash, "المبيعات النقدية"),
+				Acc_OrderAjila = ReadAccountID(LblOrderAjil, "المبيعات الآجلة"),
+				Acc_OrderReturnCash = ReadAccountID(LblReturnOrderCash, "مرتجعات المبيعات النقدية"),
+				Acc_BankNumCachir = ReadAccountID(LblBankSraf, "حساب البنك"),
+				Acc_CustomerCash = ReadAccountID(LblCustomerCash, "العملاء النقديون"),
+				Acc_supplierCash = ReadAccountID(LblSupplierCash, "الموردون النقديون"),
+				StoreEntagTam = ReadAccountID(LblEntagTam, "الإنتاج التام"),
+				StoreMawadAwalyaa = ReadAccountID(LblMawadAwalyaa, "المواد الأولية")
+			};
+
+			int result = DFLTAccNT.UpdateBranchDefaults(
+				branchID, defaults, storeMain, storeWaiting);
+			if (result <= 0)
+				throw new InvalidOperationException("لم يتم العثور على إعدادات الحسابات لهذا الفرع.");
+
+			MessageBox.Show(
+				"تم حفظ إعدادات الحسابات الافتراضية للفرع ( " + TxtNameBranch.Text + " ) بنجاح.",
+				"نجاح الحفظ", MessageBoxButtons.OK, MessageBoxIcon.Information,
+				MessageBoxDefaultButton.Button1, MessageBoxOptions.RightAlign);
 		}
-		catch (Exception)
+		catch (Exception ex)
 		{
-			throw;
+			MessageBox.Show(
+				"تعذر حفظ إعدادات الحسابات الافتراضية للفرع ( " +
+				TxtNameBranch.Text + " )." + Environment.NewLine + ex.Message,
+				"فشل الحفظ", MessageBoxButtons.OK, MessageBoxIcon.Error,
+				MessageBoxDefaultButton.Button1, MessageBoxOptions.RightAlign);
 		}
+	}
+
+	private static int? ReadAccountID(Label codeLabel, string accountName)
+	{
+		if (string.IsNullOrWhiteSpace(codeLabel.Text))
+			return null;
+
+		if (!int.TryParse(codeLabel.Text, out int accountID) || accountID <= 0)
+			throw new InvalidOperationException("اختر حساباً صالحاً لـ" + accountName + ".");
+
+		return accountID;
 	}
 
 	private void BtnExit_Click(object sender, EventArgs e)
@@ -2344,5 +2390,3 @@ public class FrmDefualtAccount : XtraForm
 		base.ResumeLayout(false);
 	}
 }
-
-

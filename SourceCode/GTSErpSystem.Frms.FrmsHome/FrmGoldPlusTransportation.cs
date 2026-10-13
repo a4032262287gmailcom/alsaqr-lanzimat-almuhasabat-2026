@@ -1688,6 +1688,8 @@ public class FrmGoldPlusTransportation : RibbonForm
 
 	private void BtnUpdateDateApp_ItemClick(object sender, ItemClickEventArgs e)
 	{
+		BtnDateApp.EditValue = DateTime.Now;
+		LoginDetails.DateApp = Convert.ToDateTime(BtnDateApp.EditValue);
 	}
 
 	private void SetDateApp()
@@ -1701,6 +1703,7 @@ public class FrmGoldPlusTransportation : RibbonForm
 
 	private void BtnReportAllOrdersRestaurant_ItemClick(object sender, ItemClickEventArgs e)
 	{
+		BtnReportAllMovementDays_ItemClick(sender, e);
 	}
 
 	private void TileLeadger_ItemClick(object sender, TileItemEventArgs e)

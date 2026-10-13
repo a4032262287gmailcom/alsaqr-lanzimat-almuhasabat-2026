@@ -78,6 +78,98 @@ public class Class_DefualtAccount
 		return 0;
 	}
 
+	public int SaveItemAccountDefaults(int BRNID, int StoreMain, int Store2, DataTable Items)
+	{
+		if (BRNID <= 0)
+			throw new ArgumentOutOfRangeException(nameof(BRNID));
+		if (StoreMain <= 0 || Store2 <= 0 || StoreMain == Store2)
+			throw new ArgumentException("يجب اختيار مستودعين مختلفين.");
+		if (Items == null || Items.Rows.Count == 0)
+			throw new ArgumentException("لا توجد حسابات افتراضية لحفظها.", nameof(Items));
+
+		var mappings = new List<Account_DefualtAccount2>();
+		foreach (DataRow row in Items.Rows)
+		{
+			if (!int.TryParse(Convert.ToString(row["كود"]), out int id) || id <= 0)
+				throw new InvalidOperationException("يوجد حساب رئيسي غير صالح في القائمة.");
+			if (!int.TryParse(Convert.ToString(row["رقم الحساب"]), out int accountID) || accountID <= 0)
+				throw new InvalidOperationException("اختر الحساب المقابل لكل صف قبل الحفظ.");
+
+			mappings.Add(new Account_DefualtAccount2
+			{
+				ID = id,
+				Name = Convert.ToString(row["اسم الحساب الرئيسي"]),
+				AccountID = accountID,
+				BranchID = BRNID
+			});
+		}
+
+		TblSetting setting = db.TblSettings.FirstOrDefault(x => x.ID == BRNID);
+		Account_DefualtAccount defaults = db.Account_DefualtAccount
+			.FirstOrDefault(x => x.BranchID == (int?)BRNID);
+		if (setting == null || defaults == null)
+			return 0;
+
+		using (var transaction = db.Database.BeginTransaction())
+		{
+			List<Account_DefualtAccount2> existing = db.Account_DefualtAccount2
+				.Where(x => x.BranchID == (int?)BRNID)
+				.ToList();
+			db.Account_DefualtAccount2.RemoveRange(existing);
+			setting.StoreID = StoreMain;
+			setting.StoreIDWaiying = Store2;
+			defaults.Acc_StoreMain = StoreMain;
+			defaults.Acc_StoreWaiting = Store2;
+
+			int result = db.SaveChanges();
+			db.Account_DefualtAccount2.AddRange(mappings);
+			result += db.SaveChanges();
+			transaction.Commit();
+			return result;
+		}
+	}
+
+	public int UpdateBranchDefaults(int BRNID, Account_DefualtAccount values, int StoreMain, int Store2)
+	{
+		if (BRNID <= 0)
+			throw new ArgumentOutOfRangeException(nameof(BRNID));
+		if (values == null)
+			throw new ArgumentNullException(nameof(values));
+		if (values.BranchID != BRNID)
+			throw new ArgumentException("بيانات الحسابات لا تطابق الفرع المحدد.", nameof(values));
+		if (StoreMain <= 0 || Store2 <= 0 || StoreMain == Store2)
+			throw new ArgumentException("يجب اختيار مستودعين مختلفين.");
+
+		Account_DefualtAccount account = db.Account_DefualtAccount
+			.FirstOrDefault(x => x.BranchID == (int?)BRNID);
+		TblSetting setting = db.TblSettings.FirstOrDefault(x => x.ID == BRNID);
+		if (account == null || setting == null)
+			return 0;
+
+		account.Acc_StoreMain = StoreMain;
+		account.Acc_StoreWaiting = Store2;
+		account.Acc_CostItemOrder = values.Acc_CostItemOrder;
+		account.Acc_VatNum = values.Acc_VatNum;
+		account.Acc_CashBox = values.Acc_CashBox;
+		account.Acc_OrderCash = values.Acc_OrderCash;
+		account.Acc_OrderAjila = values.Acc_OrderAjila;
+		account.Acc_OrderReturnCash = values.Acc_OrderReturnCash;
+		account.Acc_BankNumCachir = values.Acc_BankNumCachir;
+		account.Acc_CustomerCash = values.Acc_CustomerCash;
+		account.Acc_supplierCash = values.Acc_supplierCash;
+		account.StoreEntagTam = values.StoreEntagTam;
+		account.StoreMawadAwalyaa = values.StoreMawadAwalyaa;
+		setting.StoreID = StoreMain;
+		setting.StoreIDWaiying = Store2;
+
+		using (var transaction = db.Database.BeginTransaction())
+		{
+			int result = db.SaveChanges();
+			transaction.Commit();
+			return result;
+		}
+	}
+
 	public int Insert(int BRNID, DataTable Items)
 	{
 		int result = 0;
@@ -157,5 +249,3 @@ public class Class_DefualtAccount
 			select x).ToList();
 	}
 }
-
-

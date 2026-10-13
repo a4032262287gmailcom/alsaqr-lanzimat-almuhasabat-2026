@@ -244,7 +244,7 @@ public class FrmProjects : XtraForm
 
 	private void Edit()
 	{
-		if (CheckPermession.CheckUserPageEventEdit(LoginDetails.GroupID, 2))
+		if (CheckPermession.CheckUserPageEventEdit(LoginDetails.GroupID, 139))
 		{
 			int num = 0;
 			if (!string.IsNullOrWhiteSpace(TxtProjectName.Text))
@@ -900,5 +900,4 @@ public class FrmProjects : XtraForm
 		base.ResumeLayout(false);
 	}
 }
-
 

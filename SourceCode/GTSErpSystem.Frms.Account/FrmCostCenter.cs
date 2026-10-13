@@ -316,7 +316,7 @@ public class FrmCostCenter : XtraForm
 
 	private void Save()
 	{
-		if (CheckPermession.CheckUserPageEventSave(LoginDetails.GroupID, 2))
+		if (CheckPermession.CheckUserPageEventSave(LoginDetails.GroupID, 29))
 		{
 			if (TxtNumCostCenter.Text == "")
 			{
@@ -363,7 +363,7 @@ public class FrmCostCenter : XtraForm
 
 	private void Edit()
 	{
-		if (CheckPermession.CheckUserPageEventEdit(LoginDetails.GroupID, 2))
+		if (CheckPermession.CheckUserPageEventEdit(LoginDetails.GroupID, 29))
 		{
 			if (TxtNumCostCenter.Text == "")
 			{
@@ -414,7 +414,7 @@ public class FrmCostCenter : XtraForm
 
 	private void Delete()
 	{
-		if (CheckPermession.CheckUserPageEventDelete(LoginDetails.GroupID, 2))
+		if (CheckPermession.CheckUserPageEventDelete(LoginDetails.GroupID, 29))
 		{
 			int num = 0;
 			if (TxtAccountSonNamer.Text != "")
@@ -692,5 +692,4 @@ public class FrmCostCenter : XtraForm
 		base.ResumeLayout(false);
 	}
 }
-
 

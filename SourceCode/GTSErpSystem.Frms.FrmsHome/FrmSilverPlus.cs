@@ -1538,6 +1538,7 @@ public class FrmSilverPlus : RibbonForm
 
 	private void BtnReportAllOrdersRestaurant_ItemClick(object sender, ItemClickEventArgs e)
 	{
+		BtnReportAllMovementDays_ItemClick(sender, e);
 	}
 
 	private void TileLeadger_ItemClick(object sender, TileItemEventArgs e)
