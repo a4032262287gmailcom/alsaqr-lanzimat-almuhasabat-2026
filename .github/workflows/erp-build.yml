@@ -1,5 +1,8 @@
 name: Validate Alsaqr ERP
 on:
+  push:
+    branches:
+      - main
   pull_request:
     branches:
       - main
@@ -20,15 +23,23 @@ jobs:
 
       - name: Audit named event bindings (heuristic)
         shell: pwsh
-        run: .\tools\Audit-ERPFunctionalBindings.ps1 -ProjectRoot .\SourceCode -ReportRoot .\artifacts\EventAudit
+        run: .\\tools\\Audit-ERPFunctionalBindings.ps1 -ProjectRoot .\\SourceCode -ReportRoot .\\artifacts\\EventAudit
 
       - name: Restore packages
         shell: pwsh
-        run: dotnet restore .\AlsaqrERP.sln
+        run: dotnet restore .\\AlsaqrERP.sln
 
       - name: Build Release
         shell: pwsh
-        run: dotnet build .\AlsaqrERP.sln --configuration Release --no-restore --no-incremental
+        run: dotnet build .\\AlsaqrERP.sln --configuration Release --no-restore --no-incremental
+
+      - name: Upload Windows build output
+        uses: actions/upload-artifact@v4
+        with:
+          name: AlsaqrERP-Windows-Release
+          path: SourceCode/bin/Release/net48/**
+          if-no-files-found: error
+          retention-days: 14
 
       - name: Upload event audit reports
         if: always()
@@ -37,3 +48,4 @@ jobs:
           name: erp-event-audit
           path: artifacts/EventAudit/**
           if-no-files-found: warn
+          retention-days: 14
