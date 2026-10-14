@@ -3418,6 +3418,8 @@ public class FrmCashirPharm : XtraForm
 
 	private void MenuNew_Click(object sender, EventArgs e)
 	{
+		// Reuse the existing New action so the menu enforces the same cashier-security flow.
+		BtnNew_Click(sender, e);
 	}
 
 	private void MenuSave_Click(object sender, EventArgs e)
