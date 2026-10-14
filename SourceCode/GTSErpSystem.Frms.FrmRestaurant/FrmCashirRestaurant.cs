@@ -5380,6 +5380,8 @@ public class FrmCashirRestaurant : XtraForm
 
 	private void MenuNew_Click(object sender, EventArgs e)
 	{
+		// Keep the menu command consistent with the existing New toolbar action.
+		BtnNew_Click(sender, e);
 	}
 
 	private void MenuSave_Click(object sender, EventArgs e)
