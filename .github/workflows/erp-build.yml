@@ -33,11 +33,45 @@ jobs:
         shell: pwsh
         run: dotnet build .\\AlsaqrERP.sln --configuration Release --no-restore --no-incremental
 
-      - name: Upload Windows build output
+      - name: Package Windows Release ZIP and checksum
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $source = Join-Path $PWD 'SourceCode/bin/Release/net48'
+          if (-not (Test-Path $source -PathType Container)) {
+            throw "Release output folder was not found: $source"
+          }
+          $package = Join-Path $env:RUNNER_TEMP 'AlsaqrERP-Windows-Release'
+          $artifactDir = Join-Path $PWD 'artifacts'
+          New-Item -ItemType Directory -Path $package -Force | Out-Null
+          New-Item -ItemType Directory -Path $artifactDir -Force | Out-Null
+          Copy-Item -Path (Join-Path $source '*') -Destination $package -Recurse -Force
+          @'
+          الصقر لأنظمة المحاسبة — حزمة Windows Release
+          ============================================
+          هذه حزمة ملفات ناتجة عن بناء المشروع، وليست مثبت Windows مستقلًا.
+          1) فك الضغط إلى مجلد محلي كامل.
+          2) لا تحذف ملفات DLL أو ملفات الإعداد المصاحبة للبرنامج.
+          3) راجع إعدادات الاتصال بقاعدة البيانات قبل التشغيل، ولا تضع كلمات المرور في مستودع عام.
+          4) احتفظ بنسخة احتياطية من قاعدة البيانات قبل أي تحديث.
+          5) اختبر الطباعة والباركود على الأجهزة الفعلية قبل الاستخدام التجاري.
+          إذا لم يوجد ملف تشغيل EXE في الحزمة، فلا تعتبرها حزمة تشغيل مكتملة؛ راجع إعدادات مشروع بدء التشغيل.
+          '@ | Set-Content -Path (Join-Path $package 'اقرأني-قبل-التشغيل.txt') -Encoding UTF8
+          $zip = Join-Path $artifactDir 'AlsaqrERP-Windows-Release.zip'
+          if (Test-Path $zip) { Remove-Item $zip -Force }
+          Compress-Archive -Path (Join-Path $package '*') -DestinationPath $zip -CompressionLevel Optimal
+          $hash = (Get-FileHash -Path $zip -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$hash  AlsaqrERP-Windows-Release.zip" | Set-Content -Path "$zip.sha256" -Encoding ASCII
+          Write-Host "Created $zip"
+          Write-Host "SHA256: $hash"
+
+      - name: Upload Windows release package
         uses: actions/upload-artifact@v4
         with:
           name: AlsaqrERP-Windows-Release
-          path: SourceCode/bin/Release/net48/**
+          path: |
+            artifacts/AlsaqrERP-Windows-Release.zip
+            artifacts/AlsaqrERP-Windows-Release.zip.sha256
           if-no-files-found: error
           retention-days: 14
 
