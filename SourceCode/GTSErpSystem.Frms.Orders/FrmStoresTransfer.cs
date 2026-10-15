@@ -79,9 +79,9 @@ public class FrmStoresTransfer : XtraForm
 
 	public bool ISEVENTDISC = true;
 
-	private string fileNameAR = Application.StartupPath + "\\Layout\\StoresTransferAR.xml";
+	private string fileNameAR = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Alsaqr", "ERP", "Layout", "StoresTransferAR.xml");
 
-	private string fileNameEN = Application.StartupPath + "\\Layout\\StoresTransferEN.xml";
+	private string fileNameEN = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Alsaqr", "ERP", "Layout", "StoresTransferEN.xml");
 
 	private IContainer components = null;
 
@@ -2073,13 +2073,18 @@ public class FrmStoresTransfer : XtraForm
 
 	private void FrmStoresTransfer_FormClosing(object sender, FormClosingEventArgs e)
 	{
-		if (LoginDetails.Lang == "ar-EG")
+		string layoutFile = LoginDetails.Lang == "ar-EG" ? fileNameAR : fileNameEN;
+
+		try
 		{
-			gridControl1.MainView.SaveLayoutToXml(fileNameAR);
+			// Store per-user layout settings outside the protected application install folder.
+			System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(layoutFile));
+			gridControl1.MainView.SaveLayoutToXml(layoutFile);
 		}
-		else
+		catch (Exception ex)
 		{
-			gridControl1.MainView.SaveLayoutToXml(fileNameEN);
+			// Layout preferences are optional; do not crash while closing the transfer screen.
+			System.Diagnostics.Trace.WriteLine("Could not save stores-transfer layout: " + ex);
 		}
 	}
 
