@@ -113,8 +113,27 @@ public class FrmSearchPurchReturn : XtraForm
 
 	private void BtnNext_Click(object sender, EventArgs e)
 	{
+		if (gridEX1 == null || gridEX1.SelectedItems == null || gridEX1.SelectedItems.Count == 0)
+		{
+			MessageBox.Show(LoginDetails.Lang == "ar-EG" ? "الرجاء تحديد مرتجع مشتريات من القائمة أولاً." : "Please select a purchase return from the list first.", "تنبيه", MessageBoxButtons.OK, MessageBoxIcon.Information);
+			return;
+		}
+
 		int position = gridEX1.SelectedItems[0].Position;
-		CustCode = Convert.ToInt32(gridEX1.GetRow(position).Cells[1].Text);
+		if (position < 0)
+		{
+			MessageBox.Show(LoginDetails.Lang == "ar-EG" ? "الرجاء تحديد مرتجع مشتريات من القائمة أولاً." : "Please select a purchase return from the list first.", "تنبيه", MessageBoxButtons.OK, MessageBoxIcon.Information);
+			return;
+		}
+
+		int selectedPurchaseReturnId;
+		if (!int.TryParse(gridEX1.GetRow(position).Cells[1].Text, out selectedPurchaseReturnId))
+		{
+			MessageBox.Show(LoginDetails.Lang == "ar-EG" ? "تعذر قراءة رقم مرتجع المشتريات المحدد." : "Unable to read the selected purchase return number.", "تنبيه", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+			return;
+		}
+
+		CustCode = selectedPurchaseReturnId;
 		Close();
 	}
 
@@ -125,8 +144,27 @@ public class FrmSearchPurchReturn : XtraForm
 
 	private void gridEX1_DoubleClick(object sender, EventArgs e)
 	{
+		if (gridEX1 == null || gridEX1.SelectedItems == null || gridEX1.SelectedItems.Count == 0)
+		{
+			MessageBox.Show(LoginDetails.Lang == "ar-EG" ? "الرجاء تحديد مرتجع مشتريات من القائمة أولاً." : "Please select a purchase return from the list first.", "تنبيه", MessageBoxButtons.OK, MessageBoxIcon.Information);
+			return;
+		}
+
 		int position = gridEX1.SelectedItems[0].Position;
-		CustCode = Convert.ToInt32(gridEX1.GetRow(position).Cells[1].Text);
+		if (position < 0)
+		{
+			MessageBox.Show(LoginDetails.Lang == "ar-EG" ? "الرجاء تحديد مرتجع مشتريات من القائمة أولاً." : "Please select a purchase return from the list first.", "تنبيه", MessageBoxButtons.OK, MessageBoxIcon.Information);
+			return;
+		}
+
+		int selectedPurchaseReturnId;
+		if (!int.TryParse(gridEX1.GetRow(position).Cells[1].Text, out selectedPurchaseReturnId))
+		{
+			MessageBox.Show(LoginDetails.Lang == "ar-EG" ? "تعذر قراءة رقم مرتجع المشتريات المحدد." : "Unable to read the selected purchase return number.", "تنبيه", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+			return;
+		}
+
+		CustCode = selectedPurchaseReturnId;
 		Close();
 	}
 
