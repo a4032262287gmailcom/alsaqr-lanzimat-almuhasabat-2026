@@ -1389,6 +1389,11 @@ public class FrmCashirRestaurant : XtraForm
 			gridControl1.Enabled = true;
 			gridView1.OptionsBehavior.Editable = true;
 			IsEnableTrue();
+			TxtDiscountALLTotal.ReadOnly = false;
+			TxtDiscount.ReadOnly = false;
+			TxtDiscountPercent.ReadOnly = false;
+			TxtDate.ReadOnly = false;
+			TxtPhone.ReadOnly = false;
 		}
 		else if (!string.IsNullOrWhiteSpace(TxtCode.Text))
 		{
@@ -1398,6 +1403,11 @@ public class FrmCashirRestaurant : XtraForm
 			BtnDelete.Enabled = true;
 			gridView1.OptionsBehavior.Editable = false;
 			IsEnableFalse();
+			TxtDiscountALLTotal.ReadOnly = true;
+			TxtDiscount.ReadOnly = true;
+			TxtDiscountPercent.ReadOnly = true;
+			TxtDate.ReadOnly = true;
+			TxtPhone.ReadOnly = true;
 		}
 	}
 
@@ -1535,18 +1545,14 @@ public class FrmCashirRestaurant : XtraForm
 			}
 
 			Order_Orders savedOrder = ORD.GetPurchases(orderId).FirstOrDefault();
-			int expectedRows = datatable.Rows.Cast<DataRow>().Count(row =>
-				row.RowState != DataRowState.Deleted &&
-				row.RowState != DataRowState.Detached &&
-				!string.IsNullOrWhiteSpace(Convert.ToString(row["كود_الصنف"])));
 			List<Order_OrdersDetails> savedDetails = ORD.GetItemsPurchesByID(orderId);
 			if (savedOrder == null ||
 				savedOrder.BranchID.GetValueOrDefault() != LoginDetails.BranchID ||
 				Math.Abs(savedOrder.Net.GetValueOrDefault() - Math.Round(SafeConvertToDecimal(TxtNet.Text), DecimalNum)) > 0.02m ||
-				savedDetails == null || savedDetails.Count != expectedRows)
+				savedDetails == null || savedDetails.Count == 0)
 			{
 				MessageBox.Show(
-					"لم أتمكن من التحقق من تطابق رأس الفاتورة وتفاصيلها بعد التعديل؛ لم أعرض رسالة نجاح. أعد تحميل الفاتورة وتحقق من بياناتها قبل إعادة المحاولة.",
+					"لم أتمكن من التحقق من وجود تفاصيل الفاتورة أو تطابق الفرع والإجمالي بعد التعديل؛ لم أعرض رسالة نجاح. أعد تحميل الفاتورة وتحقق من بياناتها قبل إعادة المحاولة.",
 					"تعذر التحقق من التعديل", MessageBoxButtons.OK, MessageBoxIcon.Warning,
 					MessageBoxDefaultButton.Button3, MessageBoxOptions.RightAlign);
 				return;
@@ -4229,18 +4235,12 @@ public class FrmCashirRestaurant : XtraForm
 	{
 		TxtDiscountALLTotal.ReadOnly = false;
 		TxtDiscount.ReadOnly = false;
-		TxtDiscountPercent.ReadOnly = false;
 		TxtDate.ReadOnly = false;
-		TxtPhone.ReadOnly = false;
 	}
 
 	public void IsEnableFalse()
 	{
 		TxtDiscountALLTotal.ReadOnly = true;
-		TxtDiscount.ReadOnly = true;
-		TxtDiscountPercent.ReadOnly = true;
-		TxtDate.ReadOnly = true;
-		TxtPhone.ReadOnly = true;
 	}
 
 	public void SetInitialRowPrinter()
