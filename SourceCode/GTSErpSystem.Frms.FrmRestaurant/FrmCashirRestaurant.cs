@@ -1346,12 +1346,15 @@ public class FrmCashirRestaurant : XtraForm
 				return false;
 			}
 
+			// Copy the out parameter to a local before using it inside LINQ expression trees.
+			int checkedOrderId = orderId;
+			int checkedBranchId = LoginDetails.BranchID;
 			using (GTSdbEntities checkDb = new GTSdbEntities())
 			{
 				bool hasReturn = checkDb.Order_OrderReturn.Any(x =>
-					x.FromPurchesID == (int?)orderId && x.BranchID == (int?)LoginDetails.BranchID);
+					x.FromPurchesID == (int?)checkedOrderId && x.BranchID == (int?)checkedBranchId);
 				bool hasCheckout = checkDb.Order_CheckoutOrders.Any(x =>
-					x.FromPurchesID == (int?)orderId && x.BranchID == (int?)LoginDetails.BranchID);
+					x.FromPurchesID == (int?)checkedOrderId && x.BranchID == (int?)checkedBranchId);
 				if (hasReturn || hasCheckout)
 				{
 					MessageBox.Show(
