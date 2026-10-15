@@ -851,6 +851,21 @@ namespace GTSErpSystem
             names["FrmAllOrdersProfitByItems"] = "أرباح المبيعات حسب الصنف";
             names["FrmOrdersReturnNoPurchCode"] = "مرتجعات المبيعات دون فاتورة أصلية";
             names["FrmPurchasesReturnNoPurchCode"] = "مرتجعات المشتريات دون فاتورة أصلية";
+            
+            // Arabic captions for legacy forms shown in the unified dashboard.
+            // Never expose internal class names when a reviewed label is available.
+            names["FrmDalala"] = "فواتير الدلالة والعمولات";
+            names["FrmInventorySettlementMinus"] = "تسوية نقص المخزون";
+            names["FrmOrderReturnRental"] = "مرتجعات الإيجار";
+            names["FrmPaymentItem"] = "سندات صرف الأصناف";
+            names["FrmRecpItem"] = "سندات قبض الأصناف";
+            names["FrmReplace"] = "استبدال الأصناف";
+            names["FrmSending"] = "إرسال العهدة";
+            names["FrmTransferBranchMaster"] = "التحويل المركزي بين الفروع";
+            names["FrmTransferFromBranch"] = "تحويل من فرع";
+            names["FrmTransferToBranch"] = "تحويل إلى فرع";
+            names["FrmTransferMasterToBranch"] = "التحويل المركزي إلى فرع";
+            names["FrmCashirWithOutGroup"] = "نقطة البيع بدون مجموعات";
 
             string caption;
             if (names.TryGetValue(type.Name, out caption))
