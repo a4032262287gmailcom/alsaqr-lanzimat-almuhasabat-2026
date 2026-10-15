@@ -68,12 +68,19 @@
 
 ## روابط لوحة المفاتيح في الشبكات — 2026-10-15
 
-في الشاشات التالية أصبح مفتاح Delete داخل الشبكة يمر عبر المعالج الحالي `gridControl_ProcessGridKey`، الذي يحذف الصف المحدد من شبكة التحرير:
+في 12 شاشة أصبح مفتاح Delete داخل الشبكة يمر عبر المعالج الحالي `gridControl_ProcessGridKey`، الذي يحذف الصف المحدد من شبكة التحرير:
 
 - اليومية `FrmDailyRestrictions`
 - اليومية المعلقة `FrmDailyRestrictionsTest`
 - سندات الصرف المتعددة `FrmPaymentBig`
+- سندات القبض المتعددة `FrmReceiptsBig`
+- العقود `FrmContract`
+- الضمانات `FrmGuarantee`
+- إرسال العهدة `FrmSending`
+- إيصال الإيجار `FrmRecipt`
+- عرض السعر `FrmPriceOffer`
 - عهد الموظفين `FrmEntrustedEmployee`
+- الرواتب `FrmPayroll`
 - مسير الرواتب المؤقت `FrmPayrollTemp`
 
 هذا يزيل الربط بالمعالج الفارغ، ولا يستبدل عملية الحفظ أو يعتمد أي تغيير مالي تلقائيًا.
