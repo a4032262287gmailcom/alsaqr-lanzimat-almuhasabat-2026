@@ -66,10 +66,10 @@ public class FrmAllOrdersProfitByItems : XtraForm
 			Thread.CurrentThread.CurrentUICulture = CultureInfo.GetCultureInfo("en-US");
 		}
 		InitializeComponent();
-		TxtDate1.Text = DateTime.Now.AddMonths(-1).ToShortDateString();
-		TxtDate2.Text = DateTime.Now.ToString("yyyy/MM/dd");
-		TxtTime1.Text = "00:00:00";
-		TxtTime2.Text = "23:59:59";
+		TxtDate1.DateTime = DateTime.Today.AddMonths(-1);
+		TxtDate2.DateTime = DateTime.Today;
+		TxtTime1.Time = DateTime.Today;
+		TxtTime2.Time = DateTime.Today.AddHours(23).AddMinutes(59).AddSeconds(59);
 		TxtDate1.Focus();
 	}
 
@@ -79,55 +79,80 @@ public class FrmAllOrdersProfitByItems : XtraForm
 		{
 			return;
 		}
-		if (TxtDate1.Text != "")
+
+		if (TxtDate1.EditValue == null || TxtDate2.EditValue == null)
 		{
-			SqlConnection sqlConnection = new SqlConnection("Data Source=" + Server + ";Initial Catalog=" + dataServer + ";Persist Security Info=True;User ID=" + userserver + ";Password=" + passServer);
-			DataSetALL dataSetALL = new DataSetALL();
-			dataSetALL.Tables["TableOrderProfitByitem"].Clear();
-			SqlCommand sqlCommand = new SqlCommand("GetReport_OrderProfitByItem", sqlConnection);
-			sqlCommand.CommandType = CommandType.StoredProcedure;
-			SqlDataAdapter sqlDataAdapter = new SqlDataAdapter(sqlCommand);
-			sqlCommand.Parameters.AddWithValue("@Date1", Convert.ToDateTime(TxtDate1.Text + " " + TxtTime1.Text));
-			sqlCommand.Parameters.AddWithValue("@Date2", Convert.ToDateTime(TxtDate2.Text + " " + TxtTime2.Text));
-			sqlCommand.Parameters.AddWithValue("@BranchID", LoginDetails.BranchID);
-			sqlDataAdapter.Fill(dataSetALL.TableOrderProfitByitem);
-			sqlConnection.Close();
-			if (dataSetALL.Tables["TableOrderProfitByitem"].Rows.Count > 0)
+			MessageBox.Show("الرجاء تحديد تاريخ البداية والنهاية.", "تنبيه", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+			return;
+		}
+
+		DateTime reportDate1;
+		DateTime reportDate2;
+		try
+		{
+			// Use typed editor values instead of parsing localized display text.
+			reportDate1 = TxtDate1.DateTime.Date.Add(TxtTime1.Time.TimeOfDay);
+			reportDate2 = TxtDate2.DateTime.Date.Add(TxtTime2.Time.TimeOfDay);
+		}
+		catch (FormatException)
+		{
+			MessageBox.Show("الرجاء إدخال تاريخ ووقت صحيحين للتقرير.", "تنبيه", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+			return;
+		}
+		catch (InvalidCastException)
+		{
+			MessageBox.Show("الرجاء إدخال تاريخ ووقت صحيحين للتقرير.", "تنبيه", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+			return;
+		}
+
+		if (reportDate2 < reportDate1)
+		{
+			MessageBox.Show("تاريخ النهاية يجب أن يكون مساويًا لتاريخ البداية أو بعده.", "تنبيه", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+			return;
+		}
+
+		SqlConnection sqlConnection = new SqlConnection("Data Source=" + Server + ";Initial Catalog=" + dataServer + ";Persist Security Info=True;User ID=" + userserver + ";Password=" + passServer);
+		DataSetALL dataSetALL = new DataSetALL();
+		dataSetALL.Tables["TableOrderProfitByitem"].Clear();
+		SqlCommand sqlCommand = new SqlCommand("GetReport_OrderProfitByItem", sqlConnection);
+		sqlCommand.CommandType = CommandType.StoredProcedure;
+		SqlDataAdapter sqlDataAdapter = new SqlDataAdapter(sqlCommand);
+		sqlCommand.Parameters.Add("@Date1", SqlDbType.DateTime).Value = reportDate1;
+		sqlCommand.Parameters.Add("@Date2", SqlDbType.DateTime).Value = reportDate2;
+		sqlCommand.Parameters.AddWithValue("@BranchID", LoginDetails.BranchID);
+		sqlDataAdapter.Fill(dataSetALL.TableOrderProfitByitem);
+		sqlConnection.Close();
+		if (dataSetALL.Tables["TableOrderProfitByitem"].Rows.Count > 0)
+		{
+			StiReport stiReport = new StiReport();
+			if (LoginDetails.Lang == "ar-EG")
 			{
-				StiReport stiReport = new StiReport();
-				if (LoginDetails.Lang == "ar-EG")
-				{
-					stiReport.Load(Application.StartupPath + "\\Reports\\ReportOrderProfitByItems.mrt");
-				}
-				else
-				{
-					stiReport.Load(Application.StartupPath + "\\ReportsEN\\ReportOrderProfitByItems.mrt");
-				}
-				stiReport.RegData(dataSetALL.TableOrderProfitByitem);
-				stiReport.Dictionary.Synchronize();
-				stiReport.Compile();
-				stiReport["CompanyAr"] = LoginDetails.CompanyNameAR;
-				stiReport["CompanyEn"] = LoginDetails.CompanyNameEN;
-				stiReport["VatNumComp"] = LoginDetails.VatNum;
-				stiReport["CommercialRegister"] = LoginDetails.CommercialRegister;
-				stiReport["Address"] = LoginDetails.Address;
-				stiReport["Phone"] = LoginDetails.Phone;
-				stiReport["Bank"] = LoginDetails.CompanyBank;
-				stiReport["Date1"] = Convert.ToDateTime(TxtDate1.Text + " " + TxtTime1.Text);
-				stiReport["Date2"] = Convert.ToDateTime(TxtDate2.Text + " " + TxtTime2.Text);
-				stiReport.Render();
-				stiReport.Show(dialogForm: true);
-				FrmReportGetOrder frmReportGetOrder = new FrmReportGetOrder();
-				frmReportGetOrder.stiViewerControl1.Report = stiReport;
+				stiReport.Load(Application.StartupPath + "\\Reports\\ReportOrderProfitByItems.mrt");
 			}
 			else
 			{
-				MessageBox.Show("لا يوجد سجلات متاحة للطباعة", "مستكشف الطباعة", MessageBoxButtons.OK, MessageBoxIcon.Hand);
+				stiReport.Load(Application.StartupPath + "\\ReportsEN\\ReportOrderProfitByItems.mrt");
 			}
+			stiReport.RegData(dataSetALL.TableOrderProfitByitem);
+			stiReport.Dictionary.Synchronize();
+			stiReport.Compile();
+			stiReport["CompanyAr"] = LoginDetails.CompanyNameAR;
+			stiReport["CompanyEn"] = LoginDetails.CompanyNameEN;
+			stiReport["VatNumComp"] = LoginDetails.VatNum;
+			stiReport["CommercialRegister"] = LoginDetails.CommercialRegister;
+			stiReport["Address"] = LoginDetails.Address;
+			stiReport["Phone"] = LoginDetails.Phone;
+			stiReport["Bank"] = LoginDetails.CompanyBank;
+			stiReport["Date1"] = reportDate1;
+			stiReport["Date2"] = reportDate2;
+			stiReport.Render();
+			stiReport.Show(dialogForm: true);
+			FrmReportGetOrder frmReportGetOrder = new FrmReportGetOrder();
+			frmReportGetOrder.stiViewerControl1.Report = stiReport;
 		}
 		else
 		{
-			MessageBox.Show("عفوا، لايوجد لك صلاحية \r\n يرجي مراجعة مدير النظام لاعطائك صلاحية.", "مستكشف صلاحيات المستخدمين", MessageBoxButtons.OK, MessageBoxIcon.Hand);
+			MessageBox.Show("لا يوجد سجلات متاحة للطباعة", "مستكشف الطباعة", MessageBoxButtons.OK, MessageBoxIcon.Hand);
 		}
 	}
 
