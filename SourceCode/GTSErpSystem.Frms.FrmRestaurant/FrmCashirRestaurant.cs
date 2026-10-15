@@ -138,6 +138,9 @@ public class FrmCashirRestaurant : XtraForm
 
 	private bool IsClosingOk = true;
 
+	// True only while editing an existing paid takeaway invoice through the existing update path.
+	private bool isEditingExistingTakeAway = false;
+
 	private int CostID = 0;
 
 	private int ItmID;
@@ -1216,17 +1219,351 @@ public class FrmCashirRestaurant : XtraForm
 
 	private void BtnNew_Click(object sender, EventArgs e)
 	{
+		if (isEditingExistingTakeAway && MessageBox.Show(
+			"توجد تعديلات غير محفوظة. هل تريد إلغاء التعديلات والبدء بفاتورة جديدة؟",
+			"إلغاء التعديل", MessageBoxButtons.YesNo, MessageBoxIcon.Warning,
+			MessageBoxDefaultButton.Button2, MessageBoxOptions.RightAlign) != DialogResult.Yes)
+			return;
+
+		isEditingExistingTakeAway = false;
 		datatable.Rows.Clear();
 		Clear();
 	}
 
-	private void BtnSave_Click(object sender, EventArgs e)
+	private async void BtnSave_Click(object sender, EventArgs e)
 	{
-		Save();
+		await SaveOrEditAsync();
 	}
 
-	private void BtnEdit_Click(object sender, EventArgs e)
+	private async void BtnEdit_Click(object sender, EventArgs e)
 	{
+		if (!CheckPermession.CheckUserPageEventEdit(LoginDetails.GroupID, 157))
+		{
+			MessageBox.Show("عفواً، لا توجد لديك صلاحية تعديل فاتورة الكاشير.", "صلاحيات المستخدمين",
+				MessageBoxButtons.OK, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button3,
+				MessageBoxOptions.RightAlign);
+			return;
+		}
+
+		if (isEditingExistingTakeAway)
+		{
+			await SaveEditedTakeAwayAsync();
+			return;
+		}
+
+		int orderId;
+		Order_Orders order;
+		if (!TryGetEditableTakeAwayOrder(out orderId, out order))
+			return;
+
+		SetTakeAwayEditMode(true);
+		MessageBox.Show(
+			"تم تفعيل وضع تعديل الفاتورة رقم (" + orderId + "). بعد تعديل البنود اضغط «حفظ التعديل» أو زر الحفظ. لن تُنشأ فاتورة جديدة.",
+			"تعديل فاتورة الكاشير", MessageBoxButtons.OK, MessageBoxIcon.Information,
+			MessageBoxDefaultButton.Button1, MessageBoxOptions.RightAlign);
+	}
+
+	private async Task SaveOrEditAsync()
+	{
+		try
+		{
+			if (isEditingExistingTakeAway)
+				await SaveEditedTakeAwayAsync();
+			else
+				await Save();
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show("تعذر تنفيذ أمر الحفظ: " + ex.Message, "خطأ في الحفظ",
+				MessageBoxButtons.OK, MessageBoxIcon.Error, MessageBoxDefaultButton.Button1,
+				MessageBoxOptions.RightAlign);
+		}
+	}
+
+	private bool TryGetEditableTakeAwayOrder(out int orderId, out Order_Orders order)
+	{
+		orderId = 0;
+		order = null;
+
+		if (!int.TryParse(TxtCode.Text, out orderId) || orderId <= 0)
+		{
+			MessageBox.Show("اختر فاتورة محفوظة أولاً ثم اضغط تعديل.", "تعديل فاتورة الكاشير",
+				MessageBoxButtons.OK, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button3,
+				MessageBoxOptions.RightAlign);
+			return false;
+		}
+
+		try
+		{
+			order = ORD.GetPurchases(orderId).FirstOrDefault();
+			if (order == null ||
+				order.PurBranchID.GetValueOrDefault() != orderId ||
+				order.BranchID.GetValueOrDefault() != LoginDetails.BranchID)
+			{
+				MessageBox.Show("لم يتم العثور على الفاتورة في الفرع الحالي.", "تعديل فاتورة الكاشير",
+					MessageBoxButtons.OK, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button3,
+					MessageBoxOptions.RightAlign);
+				return false;
+			}
+
+			// The existing generic update procedure maps OrderCashierType=false to Restaurant_TypeID=1.
+			// Do not use it for dine-in or delivery invoices, which have different workflows.
+			if (order.Restaurant_TypeID.GetValueOrDefault() != 1)
+			{
+				MessageBox.Show(
+					"التعديل من هذه الشاشة مدعوم حالياً لفواتير السفري المدفوعة فقط. لم يتم تعديل الفاتورة المحلية أو فاتورة التوصيل لأن لهما مسار تحديث مختلفاً.",
+					"نوع الفاتورة غير مدعوم للتعديل", MessageBoxButtons.OK, MessageBoxIcon.Warning,
+					MessageBoxDefaultButton.Button3, MessageBoxOptions.RightAlign);
+				return false;
+			}
+
+			if (order.Order_Paymant_Type.GetValueOrDefault() != 1 ||
+				order.IsWaiting.GetValueOrDefault())
+			{
+				MessageBox.Show(
+					"لا يمكن تعديل فاتورة معلقة أو غير مدفوعة من مسار تعديل فواتير السفري.",
+					"حالة الفاتورة غير مدعومة", MessageBoxButtons.OK, MessageBoxIcon.Warning,
+					MessageBoxDefaultButton.Button3, MessageBoxOptions.RightAlign);
+				return false;
+			}
+
+			// Do not rewrite an existing electronic invoice using the ordinary invoice update path.
+			if (LoginDetails.IsElectronicInvoice)
+			{
+				MessageBox.Show(
+					"الفوترة الإلكترونية مفعّلة. لا يمكن تعديل فاتورة موجودة من خلال مسار الحفظ العادي؛ استخدم مسار الإشعار الدائن/المدين المعتمد.",
+					"حماية الفاتورة الإلكترونية", MessageBoxButtons.OK, MessageBoxIcon.Warning,
+					MessageBoxDefaultButton.Button3, MessageBoxOptions.RightAlign);
+				return false;
+			}
+
+			if (Zakat.GetIdByOrderId(orderId).GetValueOrDefault() > 0)
+			{
+				MessageBox.Show(
+					"للفواتورة سجل فوترة إلكترونية مرتبط؛ لا يجوز تعديلها من مسار الحفظ العادي.",
+					"حماية الفاتورة الإلكترونية", MessageBoxButtons.OK, MessageBoxIcon.Warning,
+					MessageBoxDefaultButton.Button3, MessageBoxOptions.RightAlign);
+				return false;
+			}
+
+			using (GTSdbEntities checkDb = new GTSdbEntities())
+			{
+				bool hasReturn = checkDb.Order_OrderReturn.Any(x =>
+					x.FromPurchesID == (int?)orderId && x.BranchID == (int?)LoginDetails.BranchID);
+				bool hasCheckout = checkDb.Order_CheckoutOrders.Any(x =>
+					x.FromPurchesID == (int?)orderId && x.BranchID == (int?)LoginDetails.BranchID);
+				if (hasReturn || hasCheckout)
+				{
+					MessageBox.Show(
+						"لا يمكن تعديل الفاتورة لوجود حركة مرتجع أو تسوية/صرف مرتبطة بها.",
+						"تعذر تعديل الفاتورة", MessageBoxButtons.OK, MessageBoxIcon.Warning,
+						MessageBoxDefaultButton.Button3, MessageBoxOptions.RightAlign);
+					return false;
+				}
+			}
+			return true;
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show(
+				"تعذر التحقق من حالة الفاتورة قبل تعديلها؛ لم يتم فتح وضع التعديل. " + ex.Message,
+				"تعذر التحقق", MessageBoxButtons.OK, MessageBoxIcon.Error,
+				MessageBoxDefaultButton.Button3, MessageBoxOptions.RightAlign);
+			return false;
+		}
+	}
+
+	private void SetTakeAwayEditMode(bool editing)
+	{
+		isEditingExistingTakeAway = editing;
+		MenuEdit.Text = editing
+			? (LoginDetails.Lang == "ar-EG" ? "حفظ التعديل F6" : "Save changes F6")
+			: (LoginDetails.Lang == "ar-EG" ? "تعديل F6" : "Edit F6");
+
+		if (editing)
+		{
+			BtnSave.Enabled = true;
+			BtnSaveMahly.Enabled = false;
+			BtnSaveTawsel.Enabled = false;
+			BtnDelete.Enabled = false;
+			gridControl1.Enabled = true;
+			gridView1.OptionsBehavior.Editable = true;
+			IsEnableTrue();
+		}
+		else if (!string.IsNullOrWhiteSpace(TxtCode.Text))
+		{
+			BtnSave.Enabled = false;
+			BtnSaveMahly.Enabled = false;
+			BtnSaveTawsel.Enabled = false;
+			BtnDelete.Enabled = true;
+			gridView1.OptionsBehavior.Editable = false;
+			IsEnableFalse();
+		}
+	}
+
+	private async Task SaveEditedTakeAwayAsync()
+	{
+		if (!isEditingExistingTakeAway)
+			return;
+
+		if (!CheckPermession.CheckUserPageEventEdit(LoginDetails.GroupID, 157))
+		{
+			MessageBox.Show("انتهت صلاحية التعديل أو لا توجد لديك صلاحية لهذه العملية.", "صلاحيات المستخدمين",
+				MessageBoxButtons.OK, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button3,
+				MessageBoxOptions.RightAlign);
+			SetTakeAwayEditMode(false);
+			return;
+		}
+
+		int orderId;
+		Order_Orders existingOrder;
+		if (!TryGetEditableTakeAwayOrder(out orderId, out existingOrder))
+		{
+			SetTakeAwayEditMode(false);
+			return;
+		}
+
+		try
+		{
+			if (SafeConvertToDecimal(TxtNet.Text) <= 0m)
+			{
+				MessageBox.Show("لا يمكن حفظ الفاتورة لأن الإجمالي يساوي صفراً.", "التحقق من الفاتورة",
+					MessageBoxButtons.OK, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button3,
+					MessageBoxOptions.RightAlign);
+				return;
+			}
+
+			int editableItemCount = datatable.Rows.Cast<DataRow>().Count(row =>
+				row.RowState != DataRowState.Deleted &&
+				row.RowState != DataRowState.Detached &&
+				!string.IsNullOrWhiteSpace(Convert.ToString(row["كود_الصنف"])));
+			if (editableItemCount == 0)
+			{
+				MessageBox.Show("أضف صنفاً واحداً على الأقل قبل حفظ التعديلات.", "التحقق من الفاتورة",
+					MessageBoxButtons.OK, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button3,
+					MessageBoxOptions.RightAlign);
+				return;
+			}
+
+			if (IsItemPriceZero() == 0)
+				return;
+
+			GetTotalCost();
+			Cal_FinalResultTotals();
+			if (PermissionSellPrice() == 0)
+				return;
+
+			LoginDetails.NetCash = Math.Round(SafeConvertToDecimal(TxtNet.Text), DecimalNum);
+			LoginDetails.VatCash = Math.Round(SafeConvertToDecimal(TxtVatBeforeDisc.Text), DecimalNum);
+			LoginDetails.TotalFatorPrice = SafeConvertToDecimal(TxtNet.Text);
+
+			using (FrmMoneySafry payment = new FrmMoneySafry())
+			{
+				payment.ShowDialog(this);
+				if (!payment.IsComplateMony)
+					return;
+
+				Cash = SafeConvertToDecimal(payment.TxtCash.Text);
+				Bank = SafeConvertToDecimal(payment.TxtVisa.Text);
+				MoneyNeed = SafeConvertToDecimal(payment.TxtCash.Text);
+				MoneyPaying = SafeConvertToDecimal(payment.TxtVisa.Text);
+				MoneyNet = SafeConvertToDecimal(payment.TxtMoneyNet.Text);
+			}
+
+			FilterDataTableSave(datatable, orderId, IsWait: false);
+			int result = ORD.UpdateOrders(
+				orderId,
+				existingOrder.SupplierID.GetValueOrDefault(LoginDetails.Acc_CustomerCash),
+				existingOrder.IsWaiting.GetValueOrDefault(false),
+				existingOrder.SupplierName ?? "عميل نقدي",
+				TxtPhone.Text ?? string.Empty,
+				existingOrder.SupplierVatNum ?? string.Empty,
+				TxtDate.DateTime,
+				1,
+				existingOrder.Restaurant_PayType ?? "مدفوعة",
+				1,
+				existingOrder.CostCentersID.GetValueOrDefault(),
+				existingOrder.BounceID.GetValueOrDefault(),
+				existingOrder.Note ?? string.Empty,
+				existingOrder.NoteNum ?? string.Empty,
+				Math.Round(SafeConvertToDecimal(TxtCost.Text), DecimalNum),
+				SafeConvertToDecimal(TxtVat.Text),
+				SafeConvertToDecimal(TxtTotals.Text),
+				SafeConvertToDecimal(TxtTotalAll.Text),
+				Math.Round(SafeConvertToDecimal(TxtDiscount.Text), DecimalNum),
+				Math.Round(SafeConvertToDecimal(txtdicoutprege.Text), DecimalNum),
+				Math.Round(SafeConvertToDecimal(TxtVatBeforeDisc.Text), DecimalNum),
+				Math.Round(SafeConvertToDecimal(TxtTotalBeforDisc.Text), DecimalNum),
+				Math.Round(SafeConvertToDecimal(TxtTabocc.Text), DecimalNum),
+				Math.Round(SafeConvertToDecimal(TxtAllVat.Text), DecimalNum),
+				Math.Round(SafeConvertToDecimal(TxtNet.Text), DecimalNum),
+				Cash,
+				Bank,
+				false,
+				existingOrder.RoomNum.GetValueOrDefault(),
+				existingOrder.TableNum.GetValueOrDefault(),
+				dtCurrentTable,
+				existingOrder.SalesMan ?? LoginDetails.UserName,
+				existingOrder.DateHold ?? DateTime.Now,
+				existingOrder.BuildingNum ?? string.Empty,
+				existingOrder.Street ?? string.Empty,
+				existingOrder.District ?? string.Empty,
+				existingOrder.City ?? string.Empty,
+				existingOrder.Country ?? string.Empty,
+				existingOrder.PostalCode ?? string.Empty,
+				existingOrder.AdditionalNum ?? string.Empty,
+				existingOrder.CommercialRecord ?? string.Empty,
+				existingOrder.HasmPer.GetValueOrDefault(),
+				existingOrder.HasmAmount.GetValueOrDefault(),
+				existingOrder.Charge.GetValueOrDefault(),
+				existingOrder.AllDiscount.GetValueOrDefault(),
+				existingOrder.BounsAmount.GetValueOrDefault(),
+				existingOrder.CarName ?? string.Empty,
+				existingOrder.CarModel ?? string.Empty,
+				existingOrder.PlateNumber ?? string.Empty,
+				existingOrder.ChassisNum ?? string.Empty,
+				existingOrder.CarColor ?? string.Empty,
+				existingOrder.Counter ?? string.Empty,
+				existingOrder.ProjectId.GetValueOrDefault(1));
+
+			if (result <= 0)
+			{
+				MessageBox.Show("لم تُرجع طبقة البيانات نتيجة نجاح للتعديل. لم يتم عرض رسالة نجاح.", "تعذر التعديل",
+					MessageBoxButtons.OK, MessageBoxIcon.Error, MessageBoxDefaultButton.Button3,
+					MessageBoxOptions.RightAlign);
+				return;
+			}
+
+			Order_Orders savedOrder = ORD.GetPurchases(orderId).FirstOrDefault();
+			int expectedRows = datatable.Rows.Cast<DataRow>().Count(row =>
+				row.RowState != DataRowState.Deleted &&
+				row.RowState != DataRowState.Detached &&
+				!string.IsNullOrWhiteSpace(Convert.ToString(row["كود_الصنف"])));
+			List<Order_OrdersDetails> savedDetails = ORD.GetItemsPurchesByID(orderId);
+			if (savedOrder == null ||
+				savedOrder.BranchID.GetValueOrDefault() != LoginDetails.BranchID ||
+				Math.Abs(savedOrder.Net.GetValueOrDefault() - Math.Round(SafeConvertToDecimal(TxtNet.Text), DecimalNum)) > 0.02m ||
+				savedDetails == null || savedDetails.Count != expectedRows)
+			{
+				MessageBox.Show(
+					"لم أتمكن من التحقق من تطابق رأس الفاتورة وتفاصيلها بعد التعديل؛ لم أعرض رسالة نجاح. أعد تحميل الفاتورة وتحقق من بياناتها قبل إعادة المحاولة.",
+					"تعذر التحقق من التعديل", MessageBoxButtons.OK, MessageBoxIcon.Warning,
+					MessageBoxDefaultButton.Button3, MessageBoxOptions.RightAlign);
+				return;
+			}
+
+			SetTakeAwayEditMode(false);
+			GetElctornc();
+			MessageBox.Show("تم تعديل فاتورة الكاشير رقم (" + orderId + ") والتحقق من إجماليها وعدد بنودها.",
+				"نجاح التعديل", MessageBoxButtons.OK, MessageBoxIcon.Information,
+				MessageBoxDefaultButton.Button1, MessageBoxOptions.RightAlign);
+		}
+		catch (Exception ex)
+		{
+			MessageBox.Show("تعذر تعديل الفاتورة رقم (" + orderId + "). " + ex.Message,
+				"خطأ في تعديل الفاتورة", MessageBoxButtons.OK, MessageBoxIcon.Error,
+				MessageBoxDefaultButton.Button1, MessageBoxOptions.RightAlign);
+		}
 	}
 
 	private void BtnSaveMahly_Click(object sender, EventArgs e)
@@ -1314,6 +1651,13 @@ public class FrmCashirRestaurant : XtraForm
 
 	private void TxtCode_ButtonClick(object sender, ButtonPressedEventArgs e)
 	{
+		if (isEditingExistingTakeAway)
+		{
+			MessageBox.Show("احفظ التعديلات أو ألغِها قبل اختيار فاتورة أخرى.", "تعديلات غير محفوظة",
+				MessageBoxButtons.OK, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button3,
+				MessageBoxOptions.RightAlign);
+			return;
+		}
 		try
 		{
 			FrmSearchOrders frmSearchOrders = new FrmSearchOrders();
@@ -1413,6 +1757,8 @@ public class FrmCashirRestaurant : XtraForm
 				gridControl1.DataSource = datatable;
 				TxtCode.Text = order_Orders.PurBranchID.ToString();
 				Code = custCode;
+				isEditingExistingTakeAway = false;
+				SetTakeAwayEditMode(false);
 				TxtPhone.Text = order_Orders.SupplierPhone;
 				TxtDate.DateTime = Convert.ToDateTime(order_Orders.Purchases_Date);
 				TxtTotals.Text = Convert.ToString(order_Orders.TotalPrices);
@@ -2231,6 +2577,8 @@ public class FrmCashirRestaurant : XtraForm
 		RoomNom = 0;
 		TableNom = 0;
 		TblID = 1;
+		isEditingExistingTakeAway = false;
+		MenuEdit.Text = LoginDetails.Lang == "ar-EG" ? "تعديل F6" : "Edit F6";
 		BtnSave.Enabled = true;
 		BtnSaveMahly.Enabled = true;
 		BtnSaveTawsel.Enabled = true;
@@ -2255,8 +2603,11 @@ public class FrmCashirRestaurant : XtraForm
 		TxtDiscount.Enabled = true;
 		TxtDate.Enabled = true;
 		SetDateCasheir();
+		TxtDiscountALLTotal.ReadOnly = false;
 		TxtDiscount.ReadOnly = false;
 		TxtDiscountPercent.ReadOnly = false;
+		TxtDate.ReadOnly = false;
+		TxtPhone.ReadOnly = false;
 		TxtPhone.Text = string.Empty;
 		LValid.Visible = false;
 		LSucced.Visible = false;
@@ -3002,6 +3353,14 @@ public class FrmCashirRestaurant : XtraForm
 
 	private void Delete()
 	{
+		if (isEditingExistingTakeAway)
+		{
+			MessageBox.Show("احفظ التعديلات أو ألغِها قبل حذف الفاتورة.", "تعديلات غير محفوظة",
+				MessageBoxButtons.OK, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button3,
+				MessageBoxOptions.RightAlign);
+			return;
+		}
+
 		if (CheckPermession.CheckUserPageEventDelete(LoginDetails.GroupID, 157))
 		{
 			int num = 0;
@@ -3870,12 +4229,18 @@ public class FrmCashirRestaurant : XtraForm
 	{
 		TxtDiscountALLTotal.ReadOnly = false;
 		TxtDiscount.ReadOnly = false;
+		TxtDiscountPercent.ReadOnly = false;
 		TxtDate.ReadOnly = false;
+		TxtPhone.ReadOnly = false;
 	}
 
 	public void IsEnableFalse()
 	{
 		TxtDiscountALLTotal.ReadOnly = true;
+		TxtDiscount.ReadOnly = true;
+		TxtDiscountPercent.ReadOnly = true;
+		TxtDate.ReadOnly = true;
+		TxtPhone.ReadOnly = true;
 	}
 
 	public void SetInitialRowPrinter()
@@ -4992,6 +5357,9 @@ public class FrmCashirRestaurant : XtraForm
 		dtCurrentTable.Clear();
 		foreach (DataRow row in ItemOrder.Rows)
 		{
+			if (row.RowState == DataRowState.Deleted || row.RowState == DataRowState.Detached)
+				continue;
+
 			if (row["كود_الصنف"].ToString() != "")
 			{
 				dtCurrentTable.Rows.Add(num, Purchese_ID, ToInt(row["ظ…"]), ToInt(row["RowId"]), ToInt(row["ADDId"]), ToInt(row["ItemID"]), ToInt(row["ItemIDADD"]), LoginDetails.BranchID, IsWait, ToInt(row["رقم المخزن"]), ToStr(row["ItemUnitID"]), ToDecimal(row["الكمية"]), Math.Round(ToDecimal(row["متوسط_التكلفة"]), DecimalNum), ToDecimal(row["سعر الوحدة"]), Math.Round(ToDecimal(row["سعر الوحدة"]), DecimalNum), Math.Round(ToDecimal(row["الاجمالى"]), DecimalNum), Math.Round(ToDecimal(row["الضربية"]), DecimalNum), Math.Round(ToDecimal(row["سعربعدالخصم"]), DecimalNum), Math.Round(ToDecimal(row["إجمالى المبلغ"]), DecimalNum), Math.Round(ToDecimal(row["الضريبه_بعد_الخصم"]), DecimalNum), ToStr(row["أسم_الوحدة"]), 0, "", 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 0, Math.Round(ToDecimal(row["TaxTobacco"]), DecimalNum), Math.Round(ToDecimal(row["TaxTobaccoDis"]), DecimalNum));
@@ -5099,6 +5467,11 @@ public class FrmCashirRestaurant : XtraForm
 		{
 			if (e.KeyCode.ToString() == "F5")
 			{
+				return;
+			}
+			if (e.KeyCode == Keys.F6)
+			{
+				BtnEdit_Click(this, EventArgs.Empty);
 				return;
 			}
 			if (e.KeyCode.ToString() == "F8")
@@ -5384,13 +5757,14 @@ public class FrmCashirRestaurant : XtraForm
 		BtnNew_Click(sender, e);
 	}
 
-	private void MenuSave_Click(object sender, EventArgs e)
+	private async void MenuSave_Click(object sender, EventArgs e)
 	{
-		Save();
+		await SaveOrEditAsync();
 	}
 
 	private void MenuEdit_Click(object sender, EventArgs e)
 	{
+		BtnEdit_Click(sender, e);
 	}
 
 	private void MenuDelete_Click(object sender, EventArgs e)
@@ -5490,6 +5864,19 @@ public class FrmCashirRestaurant : XtraForm
 
 	private void FrmCashirRestaurant_FormClosing(object sender, FormClosingEventArgs e)
 	{
+		if (isEditingExistingTakeAway && e.CloseReason == CloseReason.UserClosing)
+		{
+			DialogResult discardChanges = MessageBox.Show(
+				"توجد تعديلات غير محفوظة. هل تريد إغلاق الشاشة وإلغاء هذه التعديلات؟",
+				"تعديلات غير محفوظة", MessageBoxButtons.YesNo, MessageBoxIcon.Warning,
+				MessageBoxDefaultButton.Button2, MessageBoxOptions.RightAlign);
+			if (discardChanges != DialogResult.Yes)
+			{
+				e.Cancel = true;
+				return;
+			}
+			isEditingExistingTakeAway = false;
+		}
 		if (e.CloseReason != CloseReason.UserClosing)
 		{
 			return;
