@@ -65,6 +65,25 @@ jobs:
           Write-Host "Created $zip"
           Write-Host "SHA256: $hash"
 
+      - name: Install Inno Setup
+        shell: pwsh
+        run: choco install innosetup --yes --no-progress
+
+      - name: Build Windows installer
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $compiler = 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe'
+          if (-not (Test-Path $compiler)) { throw "Inno Setup compiler not found: $compiler" }
+          & $compiler '.\installer\AlsaqrERP.iss'
+          if ($LASTEXITCODE -ne 0) { throw "Inno Setup failed with exit code $LASTEXITCODE" }
+          $setup = '.\artifacts\AlsaqrERP-Setup-1.0.0.exe'
+          if (-not (Test-Path $setup -PathType Leaf)) { throw "Installer was not created: $setup" }
+          $hash = (Get-FileHash -Path $setup -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$hash  AlsaqrERP-Setup-1.0.0.exe" | Set-Content -Path "$setup.sha256" -Encoding ASCII
+          Write-Host "Created $setup"
+          Write-Host "SHA256: $hash"
+
       - name: Upload Windows release package
         uses: actions/upload-artifact@v4
         with:
@@ -72,6 +91,8 @@ jobs:
           path: |
             artifacts/AlsaqrERP-Windows-Release.zip
             artifacts/AlsaqrERP-Windows-Release.zip.sha256
+            artifacts/AlsaqrERP-Setup-1.0.0.exe
+            artifacts/AlsaqrERP-Setup-1.0.0.exe.sha256
           if-no-files-found: error
           retention-days: 14
 
