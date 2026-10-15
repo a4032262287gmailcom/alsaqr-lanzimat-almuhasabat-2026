@@ -399,10 +399,6 @@ public class FrmEntrustedEmployee : XtraForm
 	{
 	}
 
-	private void gridControl1_ProcessGridKey(object sender, KeyEventArgs e)
-	{
-	}
-
 	private void repositoryItemButtonEdit2_ButtonPressed(object sender, ButtonPressedEventArgs e)
 	{
 		int num = gridView1.GetDataSourceRowIndex(gridView1.FocusedRowHandle) + 1;
@@ -461,7 +457,7 @@ public class FrmEntrustedEmployee : XtraForm
 		gridControl1.DataSource = datatable;
 		gridView1.ValidateRow += gridView1_ValidateRow;
 		gridView1.CellValueChanged += gridView1_CellValueChanged;
-		gridControl1.ProcessGridKey += gridControl1_ProcessGridKey;
+		gridControl1.ProcessGridKey += gridControl_ProcessGridKey;
 		gridView1.RowCellClick += gridView1_RowCellClick;
 		gridView1.FocusedRowChanged += gridView1_FocusedRowChanged;
 		gridView1.InvalidRowException += gridView1_InvalidRowException;
