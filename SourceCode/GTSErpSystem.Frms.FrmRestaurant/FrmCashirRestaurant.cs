@@ -1380,6 +1380,8 @@ public class FrmCashirRestaurant : XtraForm
 			? (LoginDetails.Lang == "ar-EG" ? "حفظ التعديل F6" : "Save changes F6")
 			: (LoginDetails.Lang == "ar-EG" ? "تعديل F6" : "Edit F6");
 
+		toggleSectoral.Enabled = !editing;
+
 		if (editing)
 		{
 			BtnSave.Enabled = true;
@@ -1765,6 +1767,9 @@ public class FrmCashirRestaurant : XtraForm
 				Code = custCode;
 				isEditingExistingTakeAway = false;
 				SetTakeAwayEditMode(false);
+				// Preserve the persisted wholesale/retail mode that determines the item's sell price.
+				toggleSectoral.IsOn = !order_Orders.Sectoral.HasValue || order_Orders.Sectoral.Value != 0;
+				toggleSectoral.Enabled = false;
 				TxtPhone.Text = order_Orders.SupplierPhone;
 				TxtDate.DateTime = Convert.ToDateTime(order_Orders.Purchases_Date);
 				TxtTotals.Text = Convert.ToString(order_Orders.TotalPrices);
@@ -2574,6 +2579,8 @@ public class FrmCashirRestaurant : XtraForm
 
 	private void Clear()
 	{
+		toggleSectoral.IsOn = true;
+		toggleSectoral.Enabled = true;
 		Cash = 0m;
 		Bank = 0m;
 		MoneyNeed = 0m;
@@ -2654,7 +2661,7 @@ public class FrmCashirRestaurant : XtraForm
 				MoneyPaying = Convert.ToDecimal(FrmShow.TxtVisa.Text);
 				MoneyNet = Convert.ToDecimal(FrmShow.TxtMoneyNet.Text);
 				FilterDataTableSave(datatable, Result, IsWait: false);
-				Result = ORD.SaveOrdersRestaurant_TakeAway(LoginDetails.Acc_CustomerCash, IsWaiting: false, "عميل نقدي", TxtPhone.Text, "", TxtDate.DateTime, 1, "مدفوعة", 1, 0, CostID, "", "", Math.Round(Convert.ToDecimal(TxtCost.Text), DecimalNum), Convert.ToDecimal(TxtVat.Text), Convert.ToDecimal(TxtTotals.Text), Convert.ToDecimal(TxtTotalAll.Text), Math.Round(Convert.ToDecimal(TxtDiscount.Text), DecimalNum), Math.Round(Convert.ToDecimal(txtdicoutprege.Text), DecimalNum), Math.Round(Convert.ToDecimal(TxtVatBeforeDisc.Text), DecimalNum), Math.Round(Convert.ToDecimal(TxtTotalBeforDisc.Text), DecimalNum), Math.Round(Convert.ToDecimal(TxtTabocc.Text), DecimalNum), Math.Round(Convert.ToDecimal(TxtAllVat.Text), DecimalNum), Math.Round(Convert.ToDecimal(TxtNet.Text), DecimalNum), Cash, Bank, OrderCashierType: false, 0, 0, dtCurrentTable, Sectoral: false, LoginDetails.UserName, DateTime.Now, "", "", "", "", "", "", "", "", 0m, 0m, 0m);
+				Result = ORD.SaveOrdersRestaurant_TakeAway(LoginDetails.Acc_CustomerCash, IsWaiting: false, "عميل نقدي", TxtPhone.Text, "", TxtDate.DateTime, 1, "مدفوعة", 1, 0, CostID, "", "", Math.Round(Convert.ToDecimal(TxtCost.Text), DecimalNum), Convert.ToDecimal(TxtVat.Text), Convert.ToDecimal(TxtTotals.Text), Convert.ToDecimal(TxtTotalAll.Text), Math.Round(Convert.ToDecimal(TxtDiscount.Text), DecimalNum), Math.Round(Convert.ToDecimal(txtdicoutprege.Text), DecimalNum), Math.Round(Convert.ToDecimal(TxtVatBeforeDisc.Text), DecimalNum), Math.Round(Convert.ToDecimal(TxtTotalBeforDisc.Text), DecimalNum), Math.Round(Convert.ToDecimal(TxtTabocc.Text), DecimalNum), Math.Round(Convert.ToDecimal(TxtAllVat.Text), DecimalNum), Math.Round(Convert.ToDecimal(TxtNet.Text), DecimalNum), Cash, Bank, OrderCashierType: false, 0, 0, dtCurrentTable, Sectoral: toggleSectoral.IsOn, LoginDetails.UserName, DateTime.Now, "", "", "", "", "", "", "", "", 0m, 0m, 0m);
 				Hanger = 0m;
 				RoomNom = 0;
 				TableNom = 0;
