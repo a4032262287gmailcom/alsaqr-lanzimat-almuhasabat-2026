@@ -2470,8 +2470,10 @@ public class FrmPaymentItem : XtraForm
 	private void ControlTxtNumVat_KeyDown(object sender, KeyEventArgs e)
 	{
 		if (e.KeyCode != Keys.Return)
-		{
-		}
+			return;
+
+		// Reuse the existing account picker used by the editor's button; do not invent another search path.
+		TxtCust_ButtonClick(sender, null);
 	}
 
 	private void TxtNet_TextChanged(object sender, EventArgs e)
