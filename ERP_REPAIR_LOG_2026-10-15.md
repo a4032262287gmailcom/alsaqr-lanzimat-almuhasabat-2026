@@ -43,3 +43,59 @@
 - التحقق الساكن قبل التعديل: تأكد وجود ربط القائمة، وأن المعالج فارغ، وأن `BtnNew_Click` موجود. لم يتغير أي كود للبيانات أو قاعدة البيانات أو إعدادات الاتصال.
 - التحقق بعد التعديل: سيُنفذ GitHub Actions تدقيق الأحداث والبناء عند فتح طلب الدمج. لم يُنفذ اختبار واجهة تفاعلي أو اختبار SQL فعلي من هذه البيئة.
 - حدود العمل: ما زالت معالجات التعديل في كاشير المطاعم `BtnEdit_Click` و`BtnEditMahly_Click` و`MenuEdit_Click` فارغة في المصدر الحالي؛ لم أربطها بحفظ أو ترحيل جديد دون تتبع دورة تعديل الفاتورة وقواعد المخزون والحسابات المرتبطة بها.
+
+## الإصلاح الثالث: ربط أمر تعديل كاشير المطاعم بمسار التحديث الحالي
+
+- الملف: `SourceCode/GTSErpSystem.Frms.FrmRestaurant/FrmCashirRestaurant.cs`
+- الخلل: عنصر القائمة `MenuEdit` مربوط بـ `BtnEdit_Click`، لكن المعالج كان فارغًا. كما أن زر الحفظ لا يميّز بين إنشاء فاتورة وحفظ تعديل.
+- الإصلاح: أضيف وضع تعديل صريح لفاتورة السفري المدفوعة الموجودة فقط. يُفعّل بعد التحقق من الفرع والصلاحية وحالة الفاتورة، ويستخدم `Class_Orders.UpdateOrders` الموجود بدل استدعاء `SaveOrdersRestaurant_TakeAway` المخصص للإدراج. زر الحفظ والقائمة يوجهان إلى مسار التحديث نفسه أثناء وضع التعديل. أضيف ربط F6 بالمسار نفسه، وحماية من تبديل الفاتورة أو الحذف أو الإغلاق مع وجود تعديلات غير محفوظة.
+- حواجز السلامة: يمنع التعديل إذا كانت الفاتورة محلية/توصيل/معلقة/غير مدفوعة، أو لها مرتجع/تسوية مرتبطة، أو كانت الفوترة الإلكترونية مفعّلة أو وُجد سجل ZATCA. لم أخترع تحديثاً للأنواع المحلية والتوصيل؛ تحتاج تتبعاً واختباراً منفصلين مع إجراءات SQL المناسبة.
+- التحقق داخل التطبيق: بعد استدعاء التحديث، يعاد جلب رأس الفاتورة والتفاصيل، ولا تظهر رسالة نجاح إلا إذا تطابق الفرع والإجمالي وعدد البنود.
+- إصلاح إضافي: `FilterDataTableSave` يستبعد صفوف `DataRowState.Deleted/Detached` بدلاً من محاولة قراءة صفوف محذوفة عند إنشاء جدول التفاصيل.
+- قيود التحقق: يتعين على GitHub Actions تشغيل تدقيق الأحداث والبناء. لا يتوفر هنا اتصال بقاعدة SQL Server لاختبار التفاعل الفعلي؛ نجاح البناء وحده لا يثبت سلوك الإجراءات المخزنة في قاعدة النشر.
+
+## الإصلاح الرابع: Enter يفتح منتقي الحساب في سندي الصرف والقبض المخزنيين
+
+- الملفات: `SourceCode/GTSErpSystem.Frms.Orders/FrmPaymentItem.cs` و`FrmRecpItem.cs`.
+- الخلل: حدث `TxtSuppliers.KeyDown` كان مربوطًا بالمعالج `ControlTxtNumVat_KeyDown`، لكن المعالج لا ينفذ شيئًا عند الضغط على Enter.
+- الإصلاح: عند Enter يستدعي المعالج `TxtCust_ButtonClick` الموجود في الشاشة نفسها، وهو يفتح `FrmSearchAccount` ويعبئ رقم الحساب واسمه. لا يوجد مسار بحث أو حفظ جديد.
+- التحقق الساكن: تم التأكد من أن الربط موجود في `InitializeComponent` وأن المعالج يستدعي منتقي الحساب الحالي. لم يُنفذ اختبار واجهة تفاعلي هنا.
+
+## مراجعة احترازية لوضع تعديل كاشير المطاعم
+
+- حُصر قفل/فتح حقول التاريخ والهاتف والخصم داخل `SetTakeAwayEditMode` فقط؛ أُعيدت `IsEnableTrue/IsEnableFalse` إلى نطاقهما السابق حتى لا يتغير سلوك مسارات المحلي والتوصيل.
+- بعد التحديث، لا يُشترط تساوي عدد صفوف الشبكة مع عدد سجلات التفاصيل، لأن تفاصيل الإضافات/المكونات قد تنتج صفوف تخزين متعددة؛ يُشترط وجود التفاصيل مع تطابق الفرع والإجمالي.
+- لا يزال اختبار SQL Server التفاعلي مطلوبًا للتحقق من سلوك الإجراء المخزن `Update_Order_Order_ALL` في قاعدة اختبار.
+
+## الإصلاح الخامس: حفظ واستعادة وضع «قطاعي/جملة» في كاشير المطاعم
+
+- الملف: `SourceCode/GTSErpSystem.Frms.FrmRestaurant/FrmCashirRestaurant.cs`
+- الخلل المثبت: الأسعار في `InsertNewItem` تعتمد على `toggleSectoral.IsOn` لاختيار سعر القطاعي أو الجملة، لكن مسار حفظ فواتير السفري كان يمرر `Sectoral: false` ثابتة إلى `SaveOrdersRestaurant_TakeAway`.
+- الإصلاح: أصبح الحفظ يمرر `toggleSectoral.IsOn`، وأصبح فتح فاتورة محفوظة يعيد تعيين المفتاح من `Order_Orders.Sectoral` (مع افتراض القيمة الافتراضية للبيانات القديمة الفارغة). أثناء عرض/تعديل فاتورة موجودة يُقفل المفتاح؛ لأن إجراء `UpdateOrders` الحالي لا يستقبل معامل `Sectoral`. إعادة «جديد» تفعّل المفتاح وتعيد الافتراضي.
+- التحقق: تحقق ساكن من أن السعر يُختار من المفتاح وأن إجراء الإدراج يقبل المعامل، وأن الكيان يحمل الحقل `Sectoral`. ما زال يلزم اختبار SQL تشغيلي للتأكد من حفظ المعامل في الإجراء المخزن وقاعدة الاختبار.
+
+## الإصلاح السادس: ربط اختصار Delete بإزالة الصف المحدد في 12 شاشة
+
+- الملفات:
+  - `SourceCode/GTSErpSystem.Frms.Account/FrmDailyRestrictions.cs`
+  - `SourceCode/GTSErpSystem.Frms.Account/FrmDailyRestrictionsTest.cs`
+  - `SourceCode/GTSErpSystem.Frms.Account/FrmPaymentBig.cs`
+  - `SourceCode/GTSErpSystem.Frms.Account/FrmReceiptsBig.cs`
+  - `SourceCode/GTSErpSystem.Frms.Contract/FrmContract.cs`
+  - `SourceCode/GTSErpSystem.Frms.Contract/FrmGuarantee.cs`
+  - `SourceCode/GTSErpSystem.Frms.OrderDalala/FrmSending.cs`
+  - `SourceCode/GTSErpSystem.Frms.OrderRent/FrmRecipt.cs`
+  - `SourceCode/GTSErpSystem.Frms.Orders/FrmPriceOffer.cs`
+  - `SourceCode/GTSErpSystem.Frms.Payroll/FrmEntrustedEmployee.cs`
+  - `SourceCode/GTSErpSystem.Frms.Payroll/FrmPayroll.cs`
+  - `SourceCode/GTSErpSystem.Frms.Payroll/FrmPayrollTemp.cs`
+- الخلل المثبت: كان كل ملف يربط `gridControl1.ProcessGridKey` بمعالج فارغ `gridControl1_ProcessGridKey`، مع وجود المعالج المشترك `gridControl_ProcessGridKey` في الشاشة نفسها وهو الذي يستدعي `GridView.DeleteSelectedRows()` عند الضغط على Delete.
+- الإصلاح: وُجّه الحدث إلى معالج الحذف الموجود بالفعل وأزيلت المعالجات الفارغة غير المستخدمة. لم تتم إضافة حذف مباشر إلى قاعدة البيانات؛ الحذف هنا حذف الصف المحدد من الشبكة، ويظل الحفظ خاضعًا لمسار الشاشة الحالي.
+- التحقق: تحقق ساكن من وجود المعالج المشترك وربط الحدث به في الملفات الاثني عشر. لم يجر اختبار واجهة تفاعلي أو قاعدة بيانات فعلي هنا.
+
+## الإصلاح السابع: ربط حذف الصف في سندَي الصرف والقبض
+
+- الملفات: `SourceCode/GTSErpSystem.Frms.Orders/FrmPaymentItem.cs` و`FrmRecpItem.cs`.
+- الخلل المؤكد: كان `gridControl1.ProcessGridKey` مرتبطًا بالمعالج الفارغ `gridControl1_ProcessGridKey`، بينما يحتوي الملفان على `gridControl_ProcessGridKey` الذي يعالج Delete بواسطة `GridView.DeleteSelectedRows()` ويضع `e.Handled = true`.
+- الإصلاح: تحويل الحدث إلى معالج الحذف الموجود في الشاشة نفسها، وإزالة المعالج الفارغ غير المستخدم. لم تتم إضافة حذف من قاعدة البيانات أو تغيير مسار حفظ السند.
+- التحقق: تحقق ساكن من وجود الاشتراك الواحد الصحيح وعدم بقاء أي مرجع للمعالج الفارغ. يلزم اختبار واجهة لاحق للتأكد من سلوك اختيار الصف والاعتماد على حفظ السند.
