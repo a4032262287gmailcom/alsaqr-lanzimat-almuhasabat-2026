@@ -4865,6 +4865,8 @@ public class FrmCashirWashing : XtraForm
 
 	private void MenuNew_Click(object sender, EventArgs e)
 	{
+		// Reuse the existing New action, including the cashier supervisor authorization flow.
+		BtnNew_Click(sender, e);
 	}
 
 	private void MenuSave_Click(object sender, EventArgs e)
