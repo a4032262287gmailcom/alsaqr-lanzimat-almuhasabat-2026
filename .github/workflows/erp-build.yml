@@ -33,6 +33,20 @@ jobs:
         shell: pwsh
         run: dotnet build .\\AlsaqrERP.sln --configuration Release --no-restore --no-incremental
 
+      - name: Verify required DevExpress runtime assembly
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $assembly = Join-Path $PWD 'SourceCode/bin/Release/net48/DevExpress.Images.v21.2.dll'
+          if (-not (Test-Path $assembly -PathType Leaf)) {
+            throw "Required runtime assembly is missing from Release output: $assembly. Add the licensed DevExpress.Images.v21.2.dll to App/SourceCode/bin/Debug/net48 so the project can copy it to the installer."
+          }
+          $version = [System.Reflection.AssemblyName]::GetAssemblyName($assembly).Version
+          if ($version.ToString() -ne '21.2.6.0') {
+            throw "Unexpected DevExpress.Images assembly version: $version (expected 21.2.6.0)"
+          }
+          Write-Host "Verified DevExpress.Images.v21.2.dll version $version"
+
       - name: Package Windows Release ZIP and checksum
         shell: pwsh
         run: |
