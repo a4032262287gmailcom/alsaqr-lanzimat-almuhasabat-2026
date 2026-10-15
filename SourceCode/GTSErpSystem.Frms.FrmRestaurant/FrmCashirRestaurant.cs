@@ -1806,7 +1806,8 @@ public class FrmCashirRestaurant : XtraForm
 				BtnSaveMahly.Enabled = false;
 				BtnSaveTawsel.Enabled = false;
 				BtnDelete.Enabled = true;
-				gridView1.OptionsBehavior.Editable = true;
+				// A loaded invoice is read-only until the user explicitly enters edit mode.
+				gridView1.OptionsBehavior.Editable = false;
 				ArrangeDatatable();
 				IsEnableFalse();
 			}
@@ -2058,7 +2059,8 @@ public class FrmCashirRestaurant : XtraForm
 		TxtCode.Text = order_Orders.PurBranchID.ToString();
 		BtnSave.Enabled = false;
 		BtnDelete.Enabled = true;
-		gridView1.OptionsBehavior.Editable = true;
+		// A loaded invoice is read-only until the user explicitly enters edit mode.
+		gridView1.OptionsBehavior.Editable = false;
 		ArrangeDatatable();
 		IsEnableFalse();
 	}
@@ -2595,6 +2597,8 @@ public class FrmCashirRestaurant : XtraForm
 		TblID = 1;
 		isEditingExistingTakeAway = false;
 		MenuEdit.Text = LoginDetails.Lang == "ar-EG" ? "تعديل F6" : "Edit F6";
+		// A new invoice starts in the normal editable-entry state.
+		gridView1.OptionsBehavior.Editable = true;
 		BtnSave.Enabled = true;
 		BtnSaveMahly.Enabled = true;
 		BtnSaveTawsel.Enabled = true;
@@ -5324,7 +5328,8 @@ public class FrmCashirRestaurant : XtraForm
 				BtnSaveMahly.Enabled = false;
 				BtnSaveTawsel.Enabled = false;
 				BtnDelete.Enabled = true;
-				gridView1.OptionsBehavior.Editable = true;
+				// A loaded invoice is read-only until the user explicitly enters edit mode.
+				gridView1.OptionsBehavior.Editable = false;
 				ArrangeDatatable();
 				IsEnableFalse();
 			}
