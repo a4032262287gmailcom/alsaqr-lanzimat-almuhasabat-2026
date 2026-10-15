@@ -74,17 +74,24 @@
 - الإصلاح: أصبح الحفظ يمرر `toggleSectoral.IsOn`، وأصبح فتح فاتورة محفوظة يعيد تعيين المفتاح من `Order_Orders.Sectoral` (مع افتراض القيمة الافتراضية للبيانات القديمة الفارغة). أثناء عرض/تعديل فاتورة موجودة يُقفل المفتاح؛ لأن إجراء `UpdateOrders` الحالي لا يستقبل معامل `Sectoral`. إعادة «جديد» تفعّل المفتاح وتعيد الافتراضي.
 - التحقق: تحقق ساكن من أن السعر يُختار من المفتاح وأن إجراء الإدراج يقبل المعامل، وأن الكيان يحمل الحقل `Sectoral`. ما زال يلزم اختبار SQL تشغيلي للتأكد من حفظ المعامل في الإجراء المخزن وقاعدة الاختبار.
 
-## الإصلاح السادس: ربط اختصار Delete بإزالة الصف المحدد في خمس شاشات
+## الإصلاح السادس: ربط اختصار Delete بإزالة الصف المحدد في 12 شاشة
 
 - الملفات:
   - `SourceCode/GTSErpSystem.Frms.Account/FrmDailyRestrictions.cs`
   - `SourceCode/GTSErpSystem.Frms.Account/FrmDailyRestrictionsTest.cs`
   - `SourceCode/GTSErpSystem.Frms.Account/FrmPaymentBig.cs`
+  - `SourceCode/GTSErpSystem.Frms.Account/FrmReceiptsBig.cs`
+  - `SourceCode/GTSErpSystem.Frms.Contract/FrmContract.cs`
+  - `SourceCode/GTSErpSystem.Frms.Contract/FrmGuarantee.cs`
+  - `SourceCode/GTSErpSystem.Frms.OrderDalala/FrmSending.cs`
+  - `SourceCode/GTSErpSystem.Frms.OrderRent/FrmRecipt.cs`
+  - `SourceCode/GTSErpSystem.Frms.Orders/FrmPriceOffer.cs`
   - `SourceCode/GTSErpSystem.Frms.Payroll/FrmEntrustedEmployee.cs`
+  - `SourceCode/GTSErpSystem.Frms.Payroll/FrmPayroll.cs`
   - `SourceCode/GTSErpSystem.Frms.Payroll/FrmPayrollTemp.cs`
 - الخلل المثبت: كان كل ملف يربط `gridControl1.ProcessGridKey` بمعالج فارغ `gridControl1_ProcessGridKey`، مع وجود المعالج المشترك `gridControl_ProcessGridKey` في الشاشة نفسها وهو الذي يستدعي `GridView.DeleteSelectedRows()` عند الضغط على Delete.
 - الإصلاح: وُجّه الحدث إلى معالج الحذف الموجود بالفعل وأزيلت المعالجات الفارغة غير المستخدمة. لم تتم إضافة حذف مباشر إلى قاعدة البيانات؛ الحذف هنا حذف الصف المحدد من الشبكة، ويظل الحفظ خاضعًا لمسار الشاشة الحالي.
-- التحقق: تحقق ساكن من وجود المعالج المشترك وربط الحدث به في الملفات الخمسة. لم يجر اختبار واجهة تفاعلي أو قاعدة بيانات فعلي هنا.
+- التحقق: تحقق ساكن من وجود المعالج المشترك وربط الحدث به في الملفات الاثني عشر. لم يجر اختبار واجهة تفاعلي أو قاعدة بيانات فعلي هنا.
 
 ## الإصلاح السابع: ربط حذف الصف في سندَي الصرف والقبض
 
