@@ -75,9 +75,9 @@ public class FrmPaymentBig : XtraForm
 
 	private int ProjectId = 0;
 
-	private string fileNameAR = Application.StartupPath + "\\Layout\\FrmPaymentBigAR.xml";
+	private string fileNameAR = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AlSaqr Accounting System", "Layout", "FrmPaymentBigAR.xml");
 
-	private string fileNameEN = Application.StartupPath + "\\Layout\\FrmPaymentBigEN.xml";
+	private string fileNameEN = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AlSaqr Accounting System", "Layout", "FrmPaymentBigEN.xml");
 
 	private IContainer components = null;
 
@@ -1606,16 +1606,18 @@ public class FrmPaymentBig : XtraForm
 
 	private void FrmPaymentBig_FormClosing(object sender, FormClosingEventArgs e)
 	{
-		if (LoginDetails.Lang == "ar-EG")
+		string layoutPath = LoginDetails.Lang == "ar-EG" ? fileNameAR : fileNameEN;
+		try
 		{
-			gridControl1.MainView.SaveLayoutToXml(fileNameAR);
+			System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(layoutPath));
+			gridControl1.MainView.SaveLayoutToXml(layoutPath);
 		}
-		else
+		catch (Exception ex)
 		{
-			gridControl1.MainView.SaveLayoutToXml(fileNameEN);
+			// Layout is a user preference; never prevent the form from closing if it cannot be saved.
+			System.Diagnostics.Trace.WriteLine("تعذر حفظ تخطيط شاشة سندات الصرف المتعددة: " + ex);
 		}
 	}
-
 	private void TxtAccountName_ButtonClick(object sender, ButtonPressedEventArgs e)
 	{
 		try

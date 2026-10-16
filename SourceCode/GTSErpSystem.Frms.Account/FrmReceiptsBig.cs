@@ -75,9 +75,9 @@ public class FrmReceiptsBig : XtraForm
 
 	private int ProjectId = 0;
 
-	private string fileNameAR = Application.StartupPath + "\\Layout\\ReceiptsBigAR.xml";
+	private string fileNameAR = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AlSaqr Accounting System", "Layout", "ReceiptsBigAR.xml");
 
-	private string fileNameEN = Application.StartupPath + "\\Layout\\ReceiptsBigEN.xml";
+	private string fileNameEN = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AlSaqr Accounting System", "Layout", "ReceiptsBigEN.xml");
 
 	private IContainer components = null;
 
@@ -1628,16 +1628,18 @@ public class FrmReceiptsBig : XtraForm
 
 	private void FrmReceiptsBig_FormClosing(object sender, FormClosingEventArgs e)
 	{
-		if (LoginDetails.Lang == "ar-EG")
+		string layoutPath = LoginDetails.Lang == "ar-EG" ? fileNameAR : fileNameEN;
+		try
 		{
-			gridControl1.MainView.SaveLayoutToXml(fileNameAR);
+			System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(layoutPath));
+			gridControl1.MainView.SaveLayoutToXml(layoutPath);
 		}
-		else
+		catch (Exception ex)
 		{
-			gridControl1.MainView.SaveLayoutToXml(fileNameEN);
+			// Layout is a user preference; never prevent the form from closing if it cannot be saved.
+			System.Diagnostics.Trace.WriteLine("تعذر حفظ تخطيط شاشة سندات القبض المتعددة: " + ex);
 		}
 	}
-
 	private void TxtNumNote_KeyPress(object sender, KeyPressEventArgs e)
 	{
 		if (!char.IsControl(e.KeyChar) && !char.IsDigit(e.KeyChar))
