@@ -1217,9 +1217,9 @@ public class FrmGoldPlus : RibbonForm
 
 	private void TilItems_ItemClick(object sender, TileItemEventArgs e)
 	{
-		if (CheckPermession.CheckUserPage(LoginDetails.GroupID, 12))
+		if (CheckPermession.CheckUserPage(LoginDetails.GroupID, 8))
 		{
-			new FrmCashir().Show();
+			new FrmItems().Show();
 		}
 		else
 		{
