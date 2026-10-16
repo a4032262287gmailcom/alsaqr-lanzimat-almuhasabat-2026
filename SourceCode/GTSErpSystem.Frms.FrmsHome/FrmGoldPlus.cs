@@ -1325,9 +1325,9 @@ public class FrmGoldPlus : RibbonForm
 
 	private void TilAccountDefualt_ItemClick(object sender, TileItemEventArgs e)
 	{
-		if (CheckPermession.CheckUserPage(LoginDetails.GroupID, 38))
+		if (CheckPermession.CheckUserPage(LoginDetails.GroupID, 39))
 		{
-			new FrmSetting().Show();
+			new GTSErpSystem.Frms.Account.FrmDefualtAccount().Show();
 		}
 		else
 		{
