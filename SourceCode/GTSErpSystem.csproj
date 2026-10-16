@@ -157,6 +157,10 @@
     <Reference Include="DevExpress.Data.Desktop.v21.2">
       <HintPath>$(RuntimeDependencyRoot)\DevExpress.Data.Desktop.v21.2.dll</HintPath>
     </Reference>
+    <Reference Include="DevExpress.Images.v21.2">
+      <HintPath>$(RuntimeDependencyRoot)\DevExpress.Images.v21.2.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Microsoft.EntityFrameworkCore.SqlServer">
       <HintPath>$(RuntimeDependencyRoot)\Microsoft.EntityFrameworkCore.SqlServer.dll</HintPath>
     </Reference>

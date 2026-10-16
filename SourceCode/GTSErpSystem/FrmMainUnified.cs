@@ -296,59 +296,105 @@ namespace GTSErpSystem
                 Margin = Padding.Empty,
                 Padding = Padding.Empty
             };
-
             topBar.RowStyles.Add(new RowStyle(SizeType.Absolute, 62));
             topBar.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
 
-            var header = new Panel
+            // Header is arranged in three stable regions so labels do not overlap
+            // when the Windows Forms application is resized.
+            var header = new TableLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                ColumnCount = 3,
+                RowCount = 1,
+                BackColor = White,
+                RightToLeft = RightToLeft.Yes,
+                Margin = Padding.Empty,
+                Padding = new Padding(16, 3, 16, 3)
+            };
+            header.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 29F));
+            header.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 42F));
+            header.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 29F));
+            header.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+
+            var brand = new FlowLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                FlowDirection = FlowDirection.RightToLeft,
+                WrapContents = false,
+                BackColor = White,
+                RightToLeft = RightToLeft.Yes,
+                Margin = Padding.Empty,
+                Padding = Padding.Empty
+            };
+            brand.Controls.Add(new Label
+            {
+                Text = "الصقر",
+                Width = 92,
+                Height = 54,
+                TextAlign = ContentAlignment.MiddleRight,
+                Font = new Font("Segoe UI", 21F, FontStyle.Bold),
+                ForeColor = Navy,
+                Margin = new Padding(0)
+            });
+            brand.Controls.Add(new Label
+            {
+                Text = "لأنظمة المحاسبة",
+                Width = 132,
+                Height = 54,
+                TextAlign = ContentAlignment.MiddleRight,
+                Font = new Font("Segoe UI", 10F),
+                ForeColor = Blue,
+                Margin = new Padding(4, 0, 0, 0)
+            });
+
+            var titlePanel = new Panel
             {
                 Dock = DockStyle.Fill,
                 BackColor = White,
-                Padding = new Padding(20, 5, 20, 5)
+                Margin = Padding.Empty
             };
-            header.Controls.Add(new Label
+            titlePanel.Controls.Add(new Label
             {
-                Text = "الصقر",
-                Dock = DockStyle.Right,
-                Width = 105,
-                TextAlign = ContentAlignment.MiddleRight,
-                Font = new Font("Segoe UI", 21F, FontStyle.Bold),
+                Text = "لوحة التشغيل الرئيسية",
+                Dock = DockStyle.Fill,
+                TextAlign = ContentAlignment.MiddleCenter,
+                Font = new Font("Segoe UI", 16F, FontStyle.Bold),
                 ForeColor = Navy
             });
 
-            var brandDescription = new Label
+            var accountPanel = new FlowLayoutPanel
             {
-                Text = "لأنظمة المحاسبة",
-                Dock = DockStyle.Right,
-                Width = 145,
-                TextAlign = ContentAlignment.MiddleLeft,
-                Font = new Font("Segoe UI", 10F),
-                ForeColor = Blue
+                Dock = DockStyle.Fill,
+                FlowDirection = FlowDirection.RightToLeft,
+                WrapContents = false,
+                BackColor = White,
+                RightToLeft = RightToLeft.Yes,
+                Margin = Padding.Empty,
+                Padding = new Padding(0, 7, 0, 0)
             };
-            header.Controls.Add(brandDescription);
-
             UserInfo = new Label
             {
                 Text = GetUserInfo(),
-                Dock = DockStyle.Left,
-                Width = 370,
-                TextAlign = ContentAlignment.MiddleLeft,
-                Font = new Font("Segoe UI", 10F),
-                ForeColor = Blue
+                Width = 190,
+                Height = 40,
+                AutoEllipsis = true,
+                TextAlign = ContentAlignment.MiddleRight,
+                Font = new Font("Segoe UI", 9.5F),
+                ForeColor = Blue,
+                Margin = new Padding(0, 1, 5, 0)
             };
-            header.Controls.Add(UserInfo);
+            accountPanel.Controls.Add(UserInfo);
 
             var exitButton = new Button
             {
-                Text = "خروج من النظام",
-                Dock = DockStyle.Left,
-                Width = 126,
-                Height = 38,
-                Margin = new Padding(8),
+                Text = "خروج",
+                Width = 84,
+                Height = 36,
+                Margin = new Padding(4, 2, 4, 0),
                 FlatStyle = FlatStyle.Flat,
                 BackColor = Color.FromArgb(120, 44, 49),
                 ForeColor = White,
-                Font = new Font("Segoe UI", 10F, FontStyle.Bold),
+                Font = new Font("Segoe UI", 9.5F, FontStyle.Bold),
                 Cursor = Cursors.Hand,
                 UseVisualStyleBackColor = false
             };
@@ -366,7 +412,11 @@ namespace GTSErpSystem
                     Application.Exit();
                 }
             };
-            header.Controls.Add(exitButton);
+            accountPanel.Controls.Add(exitButton);
+
+            header.Controls.Add(brand, 0, 0);
+            header.Controls.Add(titlePanel, 1, 0);
+            header.Controls.Add(accountPanel, 2, 0);
 
             var navigation = new FlowLayoutPanel
             {
@@ -376,7 +426,8 @@ namespace GTSErpSystem
                 AutoScroll = true,
                 BackColor = Navy,
                 Padding = new Padding(14, 5, 14, 5),
-                RightToLeft = RightToLeft.Yes
+                RightToLeft = RightToLeft.Yes,
+                Margin = Padding.Empty
             };
 
             foreach (string category in Categories)
@@ -384,7 +435,7 @@ namespace GTSErpSystem
                 var navButton = new Button
                 {
                     Text = category,
-                    Width = 112,
+                    Width = category == "المخزون والأصناف" || category == "الأمن والصلاحيات" ? 142 : 116,
                     Height = 40,
                     Margin = new Padding(3, 1, 3, 1),
                     FlatStyle = FlatStyle.Flat,
@@ -410,48 +461,20 @@ namespace GTSErpSystem
 
         private Control BuildContent()
         {
+            // The app title and user information live in the top bar;
+            // this area is reserved for category context, search, and modules.
             var layout = new TableLayoutPanel
             {
                 Dock = DockStyle.Fill,
                 ColumnCount = 1,
-                RowCount = 4,
+                RowCount = 3,
                 BackColor = Background,
                 Margin = Padding.Empty,
                 Padding = Padding.Empty
             };
-
-            layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 88));
-            layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 70));
+            layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 62));
             layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
             layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 30));
-
-            var header = new Panel
-            {
-                Dock = DockStyle.Fill,
-                BackColor = White,
-                Padding = new Padding(22, 8, 22, 8)
-            };
-
-            header.Controls.Add(new Label
-            {
-                Text = "لوحة التشغيل الرئيسية",
-                Dock = DockStyle.Right,
-                Width = 410,
-                TextAlign = ContentAlignment.MiddleRight,
-                Font = new Font("Segoe UI", 21F, FontStyle.Bold),
-                ForeColor = Navy
-            });
-
-            UserInfo = new Label
-            {
-                Text = GetUserInfo(),
-                Dock = DockStyle.Left,
-                Width = 390,
-                TextAlign = ContentAlignment.MiddleLeft,
-                Font = new Font("Segoe UI", 10F, FontStyle.Regular),
-                ForeColor = Blue
-            };
-            header.Controls.Add(UserInfo);
 
             var toolbar = new FlowLayoutPanel
             {
@@ -459,15 +482,16 @@ namespace GTSErpSystem
                 FlowDirection = FlowDirection.RightToLeft,
                 WrapContents = false,
                 BackColor = White,
-                Padding = new Padding(12, 12, 12, 8),
-                RightToLeft = RightToLeft.Yes
+                Padding = new Padding(16, 12, 16, 7),
+                RightToLeft = RightToLeft.Yes,
+                Margin = Padding.Empty
             };
 
             PageTitle = new Label
             {
                 Text = SelectedCategory,
-                Width = 220,
-                Height = 38,
+                Width = 205,
+                Height = 36,
                 TextAlign = ContentAlignment.MiddleRight,
                 Font = new Font("Segoe UI", 12F, FontStyle.Bold),
                 ForeColor = Navy,
@@ -477,18 +501,18 @@ namespace GTSErpSystem
             ResultCount = new Label
             {
                 Text = "",
-                Width = 130,
-                Height = 38,
+                Width = 165,
+                Height = 36,
                 TextAlign = ContentAlignment.MiddleRight,
-                ForeColor = Color.Gray,
-                Margin = new Padding(0, 1, 8, 0)
+                ForeColor = Color.FromArgb(105, 116, 132),
+                Margin = new Padding(0, 1, 10, 0)
             };
 
             var searchLabel = new Label
             {
                 Text = "بحث:",
                 Width = 45,
-                Height = 38,
+                Height = 36,
                 TextAlign = ContentAlignment.MiddleCenter,
                 ForeColor = TextColor,
                 Margin = new Padding(0, 1, 8, 0)
@@ -499,7 +523,7 @@ namespace GTSErpSystem
                 Width = 285,
                 Height = 32,
                 Font = new Font("Segoe UI", 11F),
-                Margin = new Padding(0, 4, 8, 0),
+                Margin = new Padding(0, 3, 8, 0),
                 RightToLeft = RightToLeft.Yes
             };
             SearchBox.TextChanged += delegate { RenderTiles(); };
@@ -508,11 +532,11 @@ namespace GTSErpSystem
             {
                 Text = "تحديث القائمة",
                 Width = 112,
-                Height = 36,
+                Height = 34,
                 FlatStyle = FlatStyle.Flat,
                 BackColor = Navy,
                 ForeColor = White,
-                Margin = new Padding(10, 1, 0, 0),
+                Margin = new Padding(8, 1, 0, 0),
                 Cursor = Cursors.Hand,
                 UseVisualStyleBackColor = false
             };
@@ -536,30 +560,30 @@ namespace GTSErpSystem
                 WrapContents = true,
                 FlowDirection = FlowDirection.RightToLeft,
                 BackColor = Background,
-                Padding = new Padding(18),
-                RightToLeft = RightToLeft.Yes
+                Padding = new Padding(18, 16, 18, 18),
+                RightToLeft = RightToLeft.Yes,
+                Margin = Padding.Empty
             };
 
             var status = new Panel
             {
                 Dock = DockStyle.Fill,
                 BackColor = White,
-                Padding = new Padding(16, 2, 16, 2)
+                Padding = new Padding(16, 2, 16, 2),
+                Margin = Padding.Empty
             };
             status.Controls.Add(new Label
             {
-                Text = "الصقر لأنظمة المحاسبة  |  التنقل العلوي  |  " +
-                       DateTime.Now.ToString("yyyy/MM/dd"),
+                Text = "الصقر لأنظمة المحاسبة  |  " + DateTime.Now.ToString("yyyy/MM/dd"),
                 Dock = DockStyle.Fill,
                 TextAlign = ContentAlignment.MiddleRight,
                 ForeColor = Color.Gray,
                 Font = new Font("Segoe UI", 9F)
             });
 
-            layout.Controls.Add(header, 0, 0);
-            layout.Controls.Add(toolbar, 0, 1);
-            layout.Controls.Add(Tiles, 0, 2);
-            layout.Controls.Add(status, 0, 3);
+            layout.Controls.Add(toolbar, 0, 0);
+            layout.Controls.Add(Tiles, 0, 1);
+            layout.Controls.Add(status, 0, 2);
             return layout;
         }
 
@@ -827,6 +851,21 @@ namespace GTSErpSystem
             names["FrmAllOrdersProfitByItems"] = "أرباح المبيعات حسب الصنف";
             names["FrmOrdersReturnNoPurchCode"] = "مرتجعات المبيعات دون فاتورة أصلية";
             names["FrmPurchasesReturnNoPurchCode"] = "مرتجعات المشتريات دون فاتورة أصلية";
+            
+            // Arabic captions for legacy forms shown in the unified dashboard.
+            // Never expose internal class names when a reviewed label is available.
+            names["FrmDalala"] = "فواتير الدلالة والعمولات";
+            names["FrmInventorySettlementMinus"] = "تسوية نقص المخزون";
+            names["FrmOrderReturnRental"] = "مرتجعات الإيجار";
+            names["FrmPaymentItem"] = "سندات صرف الأصناف";
+            names["FrmRecpItem"] = "سندات قبض الأصناف";
+            names["FrmReplace"] = "استبدال الأصناف";
+            names["FrmSending"] = "إرسال العهدة";
+            names["FrmTransferBranchMaster"] = "التحويل المركزي بين الفروع";
+            names["FrmTransferFromBranch"] = "تحويل من فرع";
+            names["FrmTransferToBranch"] = "تحويل إلى فرع";
+            names["FrmTransferMasterToBranch"] = "التحويل المركزي إلى فرع";
+            names["FrmCashirWithOutGroup"] = "نقطة البيع بدون مجموعات";
 
             string caption;
             if (names.TryGetValue(type.Name, out caption))
