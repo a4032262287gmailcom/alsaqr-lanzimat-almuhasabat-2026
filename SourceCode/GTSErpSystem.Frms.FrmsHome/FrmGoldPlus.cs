@@ -1217,9 +1217,9 @@ public class FrmGoldPlus : RibbonForm
 
 	private void TilItems_ItemClick(object sender, TileItemEventArgs e)
 	{
-		if (CheckPermession.CheckUserPage(LoginDetails.GroupID, 8))
+		if (CheckPermession.CheckUserPage(LoginDetails.GroupID, 12))
 		{
-			new FrmItems().Show();
+			new FrmCashir().Show();
 		}
 		else
 		{
@@ -1325,9 +1325,9 @@ public class FrmGoldPlus : RibbonForm
 
 	private void TilAccountDefualt_ItemClick(object sender, TileItemEventArgs e)
 	{
-		if (CheckPermession.CheckUserPage(LoginDetails.GroupID, 39))
+		if (CheckPermession.CheckUserPage(LoginDetails.GroupID, 38))
 		{
-			new GTSErpSystem.Frms.Account.FrmDefualtAccount().Show();
+			new FrmSetting().Show();
 		}
 		else
 		{
