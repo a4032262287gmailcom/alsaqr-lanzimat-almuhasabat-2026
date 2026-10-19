@@ -20,7 +20,16 @@
     A licensed development dependency folder can override this property when needed.
   -->
   <PropertyGroup>
-    <RuntimeDependencyRoot>$(MSBuildThisFileDirectory)..\App\SourceCode\bin\Debug\net48</RuntimeDependencyRoot>
+    <!-- Prefer the repository's dependency payload, but support a local project output folder too. -->
+    <RuntimeDependencyRoot Condition="'$(RuntimeDependencyRoot)' == '' and Exists('$(MSBuildThisFileDirectory)..\App\SourceCode\bin\Debug\net48\DevExpress.XtraEditors.v21.2.dll')">$(MSBuildThisFileDirectory)..\App\SourceCode\bin\Debug\net48</RuntimeDependencyRoot>
+    <RuntimeDependencyRoot Condition="'$(RuntimeDependencyRoot)' == '' and Exists('$(MSBuildThisFileDirectory)bin\Debug\net48\DevExpress.XtraEditors.v21.2.dll')">$(MSBuildThisFileDirectory)bin\Debug\net48</RuntimeDependencyRoot>
+    <RuntimeDependencyRoot Condition="'$(RuntimeDependencyRoot)' == '' and Exists('$(MSBuildThisFileDirectory)bin\Release\net48\DevExpress.XtraEditors.v21.2.dll')">$(MSBuildThisFileDirectory)bin\Release\net48</RuntimeDependencyRoot>
+    <RuntimeDependencyRoot Condition="'$(RuntimeDependencyRoot)' == ''">$(MSBuildThisFileDirectory)..\App\SourceCode\bin\Debug\net48</RuntimeDependencyRoot>
+    <!-- DevExpress.Images may be supplied separately by the licensed local installation. -->
+    <DevExpressImagesPath Condition="'$(DevExpressImagesPath)' == '' and Exists('$(RuntimeDependencyRoot)\DevExpress.Images.v21.2.dll')">$(RuntimeDependencyRoot)\DevExpress.Images.v21.2.dll</DevExpressImagesPath>
+    <DevExpressImagesPath Condition="'$(DevExpressImagesPath)' == '' and Exists('$(MSBuildThisFileDirectory)bin\Debug\net48\DevExpress.Images.v21.2.dll')">$(MSBuildThisFileDirectory)bin\Debug\net48\DevExpress.Images.v21.2.dll</DevExpressImagesPath>
+    <DevExpressImagesPath Condition="'$(DevExpressImagesPath)' == '' and Exists('$(MSBuildThisFileDirectory)bin\Release\net48\DevExpress.Images.v21.2.dll')">$(MSBuildThisFileDirectory)bin\Release\net48\DevExpress.Images.v21.2.dll</DevExpressImagesPath>
+    <DevExpressImagesPath Condition="'$(DevExpressImagesPath)' == ''">$(RuntimeDependencyRoot)\DevExpress.Images.v21.2.dll</DevExpressImagesPath>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>app.ico</ApplicationIcon>
@@ -158,7 +167,7 @@
       <HintPath>$(RuntimeDependencyRoot)\DevExpress.Data.Desktop.v21.2.dll</HintPath>
     </Reference>
     <Reference Include="DevExpress.Images.v21.2">
-      <HintPath>$(RuntimeDependencyRoot)\DevExpress.Images.v21.2.dll</HintPath>
+      <HintPath>$(DevExpressImagesPath)</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.EntityFrameworkCore.SqlServer">
@@ -185,4 +194,9 @@
       <Private>True</Private>
     </Reference>
   </ItemGroup>
+  <Target Name="ValidateDevExpressImagesRuntimeDependency" BeforeTargets="ResolveReferences" Condition="'$(DesignTimeBuild)' != 'true'">
+    <Error
+      Condition="!Exists('$(DevExpressImagesPath)')"
+      Text="Required licensed DevExpress.Images.v21.2.dll was not found. Set /p:DevExpressImagesPath to the full path of that DLL, or set /p:RuntimeDependencyRoot to the folder containing the licensed DevExpress runtime assemblies. The repository does not include this DLL." />
+  </Target>
 </Project>
